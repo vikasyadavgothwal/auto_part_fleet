@@ -41,7 +41,7 @@ export default function SettingsPage() {
             <Label htmlFor="currency">Preferred Currency</Label>
             <Input
               id="currency"
-              defaultValue="USD"
+              defaultValue="AED"
               className="border-[#2A2A2A] bg-[#0A0A0A]"
             />
           </div>
