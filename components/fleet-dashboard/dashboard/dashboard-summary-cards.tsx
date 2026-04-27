@@ -1,13 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card"
-
 import { summaryCards } from "./dashboard-data"
-
 export function DashboardSummaryCards() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {summaryCards.map((item) => {
         const Icon = item.icon
-
         return (
           <Card
             key={item.title}
