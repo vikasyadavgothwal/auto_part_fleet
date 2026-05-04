@@ -7,7 +7,7 @@ export function SupplierGuidanceCard() {
     <Card className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] shadow-none">
       <CardContent className="p-6">
         <h3 className="mb-6 font-semibold text-white">
-          Supplier Management Tips
+          Supplier Performance Criteria
         </h3>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

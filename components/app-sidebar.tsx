@@ -62,9 +62,9 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   isActive={isActive}
-                  className={`h-auto rounded-lg px-4 py-3 transition-all ${
+                  className={`h-auto  px-4 py-3 transition-all ${
                     isActive
-                      ? "bg-primary text-white hover:bg-primary hover:text-white"
+                      ? "rounded-sm bg-primary text-white hover:bg-primary hover:text-white"
                       : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
@@ -88,10 +88,10 @@ export function AppSidebar() {
                 currentPath === appRoutes.settings ||
                 currentPath.startsWith(`${appRoutes.settings}/`)
               }
-              className={`h-auto rounded-lg px-4 py-3 transition-all ${
+              className={`h-auto rounded-md px-4 py-3 transition-all ${
                 currentPath === appRoutes.settings ||
                 currentPath.startsWith(`${appRoutes.settings}/`)
-                  ? "bg-primary text-white hover:bg-primary hover:text-white"
+                  ? "bg-primary rounded-md text-white hover:bg-primary hover:text-white"
                   : "text-muted-foreground hover:bg-muted"
               }`}
             >

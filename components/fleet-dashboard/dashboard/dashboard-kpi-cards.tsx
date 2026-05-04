@@ -18,7 +18,7 @@ export function DashboardKpiCards() {
                 <div className="text-sm font-medium text-[#9CA3AF]">
                   {item.title}
                 </div>
-                <div className="rounded-lg border border-[#DC2626]/20 bg-[#DC2626]/10 p-2">
+                <div className="rounded-sm border border-[#DC2626]/20 bg-[#DC2626]/10 p-2">
                   <Icon className="h-5 w-5 text-[#DC2626]" />
                 </div>
               </div>
