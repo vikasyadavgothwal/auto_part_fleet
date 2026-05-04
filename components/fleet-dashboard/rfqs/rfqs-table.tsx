@@ -47,8 +47,8 @@ export function RfqsTable() {
               size="sm"
               className={
                 rfq.actionPrimary
-                  ? "bg-[#DC2626] text-white hover:bg-[#B91C1C]"
-                  : "bg-[#2A2A2A] text-[#9CA3AF] hover:bg-[#2A2A2A]"
+                  ? "bg-[#DC2626] text-white hover:bg-[#B91C1C] rounded-sm"
+                  : "bg-[#2A2A2A] text-[#9CA3AF] hover:bg-[#2A2A2A] rounded-sm"
               }
             >
               {rfq.action}
