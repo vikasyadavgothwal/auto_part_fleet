@@ -8,9 +8,6 @@ export default function SettingsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="mb-2 text-3xl font-bold text-white">Workspace Settings</h1>
-        <p className="text-[#9CA3AF]">
-          Manage the fleet workspace details used across the dashboard.
-        </p>
       </div>
 
       <Card className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] shadow-none">
