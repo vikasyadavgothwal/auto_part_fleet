@@ -1,23 +1,21 @@
-import { CostBreakdownCard } from "@/components/fleet-dashboard/orders/cost-breakdown-card"
-import { OrderFilters } from "@/components/fleet-dashboard/orders/order-filters"
-import { OrderStatCards } from "@/components/fleet-dashboard/orders/order-stat-cards"
-import { OrdersTable } from "@/components/fleet-dashboard/orders/orders-table"
-import { PageHeading } from "@/components/fleet-dashboard/shared/page-heading"
+import { cookies } from "next/headers"
 
-export default function FleetOrdersPage() {
-  return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      <div className="space-y-8">
-        <PageHeading
-          title="Fleet Orders"
-          description="Track bulk orders and deliveries for your fleet."
-        />
+import { LiveOrdersPageContent } from "@/components/fleet-dashboard/orders/live-orders-page-content"
+import type { LiveOrder, OrderPagination, OrderSummary } from "@/components/fleet-dashboard/orders/live-types"
+import { requestBackend } from "@/lib/auth/backend"
 
-        <OrderStatCards />
-        <OrderFilters />
-        <OrdersTable />
-        <CostBreakdownCard />
-      </div>
-    </div>
-  )
+export default async function FleetOrdersPage() {
+  let orders: LiveOrder[] = []
+  let pagination: OrderPagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 }
+  let summary: OrderSummary = { totalOrders: 0, totalAmount: 0, byStatus: {} }
+  try {
+    const response = await requestBackend("/api/v1/orders?page=1&pageSize=10", { cookieHeader: (await cookies()).toString() })
+    const payload = await response.json() as { ok: boolean; orders?: LiveOrder[]; pagination?: OrderPagination; summary?: OrderSummary }
+    if (response.ok && payload.ok) {
+      orders = payload.orders ?? []
+      pagination = payload.pagination ?? pagination
+      summary = payload.summary ?? summary
+    }
+  } catch {}
+  return <LiveOrdersPageContent initialOrders={orders} initialPagination={pagination} initialSummary={summary} />
 }

@@ -1,32 +1,24 @@
-import Link from "next/link"
-import { Plus } from "lucide-react"
+import { cookies } from "next/headers"
 
-import { PageHeading } from "@/components/fleet-dashboard/shared/page-heading"
-import { RfqBenefitsCard } from "@/components/fleet-dashboard/rfqs/rfq-benefits-card"
-import { RfqStatCards } from "@/components/fleet-dashboard/rfqs/rfq-stat-cards"
-import { RfqsTable } from "@/components/fleet-dashboard/rfqs/rfqs-table"
-import { Button } from "@/components/ui/button"
-import { appRoutes } from "@/lib/routes"
+import { FleetRfqsPageContent } from "@/components/fleet-dashboard/rfqs/fleet-rfqs-page-content"
+import type { FleetRfq, RfqPagination } from "@/components/fleet-dashboard/rfqs/rfqs-data"
+import { requestBackend } from "@/lib/auth/backend"
 
-export default function FleetRfqsPage() {
-  return (
-    <div className="space-y-8">
-      <PageHeading
-        title="Fleet RFQs"
-        description="Manage bulk procurement requests for your fleet."
-        action={
-          <Link href={appRoutes.createRfq}>
-            <Button className="gap-2 bg-[#DC2626] text-white hover:bg-[#B91C1C]">
-              <Plus className="h-5 w-5" />
-              Create Bulk RFQ
-            </Button>
-          </Link>
-        }
-      />
-
-      <RfqStatCards />
-      <RfqsTable />
-      <RfqBenefitsCard />
-    </div>
-  )
+export default async function FleetRfqsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ created?: string }>
+}) {
+  let rfqs: FleetRfq[] = []
+  let pagination: RfqPagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 }
+  try {
+    const response = await requestBackend("/api/v1/rfqs?page=1&pageSize=10", { cookieHeader: (await cookies()).toString() })
+    const payload = await response.json() as { ok: boolean; rfqs?: FleetRfq[]; pagination?: RfqPagination }
+    if (response.ok && payload.ok) {
+      rfqs = payload.rfqs ?? []
+      pagination = payload.pagination ?? pagination
+    }
+  } catch {}
+  const { created } = await searchParams
+  return <FleetRfqsPageContent initialRfqs={rfqs} initialPagination={pagination} createdRfqId={created || null} />
 }

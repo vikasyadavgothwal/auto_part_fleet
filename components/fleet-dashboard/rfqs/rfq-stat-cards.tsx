@@ -1,8 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card"
 
-import { stats } from "./rfqs-data"
+import type { FleetRfq } from "./rfqs-data"
 
-export function RfqStatCards() {
+export function RfqStatCards({ rfqs }: { rfqs: FleetRfq[] }) {
+  const stats = [
+    { title: "Total RFQs", value: String(rfqs.length), valueClass: "text-white" },
+    { title: "Active", value: String(rfqs.filter((rfq) => rfq.status === "open").length), valueClass: "text-[#DC2626]" },
+    { title: "Total Quotes", value: String(rfqs.reduce((sum, rfq) => sum + rfq.bids.length, 0)), valueClass: "text-white" },
+    { title: "Orders Created", value: String(rfqs.filter((rfq) => rfq.order).length), valueClass: "text-white" },
+  ]
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
       {stats.map((stat) => (
