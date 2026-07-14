@@ -13,10 +13,20 @@ const config = {
 export const isFirebaseAuthConfigured = () =>
   [config.apiKey, config.authDomain, config.projectId, config.appId].every((value) => Boolean(value?.trim()))
 
-const auth = () => getAuth(getApps().length ? getApp() : initializeApp(config))
+export const getFirebaseAuth = () =>
+  getAuth(getApps().length ? getApp() : initializeApp(config))
+
+export const getFirebaseAuthDiagnostics = () => ({
+  origin: typeof window === "undefined" ? "server" : window.location.origin,
+  authDomain: config.authDomain ?? "",
+  projectId: config.projectId ?? "",
+  apiKeyHint: config.apiKey
+    ? `${config.apiKey.slice(0, 6)}...${config.apiKey.slice(-4)}`
+    : "",
+})
 
 export async function createFirebaseLoginPayload(email: string, password: string) {
-  const credential = await signInWithEmailAndPassword(auth(), email, password)
+  const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email, password)
   await reload(credential.user)
   if (credential.user.email && !credential.user.emailVerified) throw new Error("Verify your email before signing in.")
   const key = "auto-parts-pro-installation-id"
@@ -29,5 +39,5 @@ export async function createFirebaseLoginPayload(email: string, password: string
 }
 
 export async function signOutFirebase() {
-  if (isFirebaseAuthConfigured()) await signOut(auth())
+  if (isFirebaseAuthConfigured()) await signOut(getFirebaseAuth())
 }

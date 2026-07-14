@@ -35,9 +35,8 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
     date.setDate(date.getDate() + 7)
     return date.toISOString().slice(0, 10)
   })
-  const [deliveryRequirement, setDeliveryRequirement] =
-    useState("Standard Delivery")
-  const [paymentTerms, setPaymentTerms] = useState("Net 30")
+  const deliveryRequirement = "Standard Delivery"
+  const paymentTerms = "Net 30"
   const [vehicles, setVehicles] = useState<FleetVehicle[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState(initialVehicleId)
   const [attachment, setAttachment] = useState<File | null>(null)
@@ -73,7 +72,7 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
   )
 
   const canContinueStep2 =
-    projectName.trim() && deadline.trim() && deliveryRequirement && paymentTerms && selectedVehicleId
+    projectName.trim() && deadline.trim() && selectedVehicleId
 
   function updatePart(id: number, field: keyof PartItem, value: string | number) {
     setParts((prev) =>
@@ -166,8 +165,6 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
             projectName={projectName}
             description={description}
             deadline={deadline}
-            deliveryRequirement={deliveryRequirement}
-            paymentTerms={paymentTerms}
             vehicles={vehicles}
             selectedVehicleId={selectedVehicleId}
             canContinue={Boolean(canContinueStep2)}
@@ -176,8 +173,6 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
             onProjectNameChange={setProjectName}
             onDescriptionChange={setDescription}
             onDeadlineChange={setDeadline}
-            onDeliveryRequirementChange={setDeliveryRequirement}
-            onPaymentTermsChange={setPaymentTerms}
             onVehicleChange={setSelectedVehicleId}
             onAttachmentChange={setAttachment}
           />

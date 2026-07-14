@@ -2,12 +2,14 @@ export type FleetRfqBid = {
   id: string
   totalAmount: number
   deliveryDays: number
+  partType: string
   validUntil: string | null
   notes: string | null
   status: "submitted" | "accepted" | "rejected" | "withdrawn"
   createdAt: string
   supplier: {
     id: string
+    supplierPublicId?: string | null
     companyName: string | null
     firstName: string | null
     lastName: string | null

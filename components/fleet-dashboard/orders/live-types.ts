@@ -5,8 +5,17 @@ export type LiveOrder = {
   totalAmount: number
   status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled"
   createdAt: string
+  deliveryRecipientName: string | null
+  deliveryPhone: string | null
+  deliveryAddressLine1: string | null
+  deliveryAddressLine2: string | null
+  deliveryLandmark: string | null
+  deliveryCity: string | null
+  deliveryState: string | null
+  deliveryPostalCode: string | null
+  deliveryCountry: string | null
   buyer: { id: string; companyName: string | null; firstName: string | null; lastName: string | null; email: string | null; activeRole: string }
-  supplier: { id: string; companyName: string | null; firstName: string | null; lastName: string | null; email: string | null }
+  supplier: { id: string; supplierPublicId?: string | null; companyName: string | null; firstName: string | null; lastName: string | null; email: string | null }
   items: Array<{ id: string; partName: string; partNumber: string | null; quantity: number; unitPrice: number | null; lineTotal: number | null }>
   rfq: {
     publicId: string
