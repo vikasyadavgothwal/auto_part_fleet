@@ -165,7 +165,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
         <label htmlFor={inputId} className="font-medium">
           Delivery address
         </label>
-        <Link href={appPath(appRoutes.settings)} className="text-xs font-medium text-[#DC2626] hover:text-[#F87171]">
+        <Link href={appRoutes.settings} className="text-xs font-medium text-[#DC2626] hover:text-[#F87171]">
           Manage addresses
         </Link>
       </div>
@@ -197,7 +197,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
           <p className="text-[#9CA3AF]">
             Add a saved delivery address before creating an order.
           </p>
-          <Link href={appPath(appRoutes.settings)}>
+          <Link href={appRoutes.settings}>
             <Button type="button" variant="outline">
               Add address in Settings
             </Button>
