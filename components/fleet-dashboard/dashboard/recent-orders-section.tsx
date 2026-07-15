@@ -1,12 +1,12 @@
 import Link from "next/link"
 
+import type { DashboardOrderRow } from "@/lib/fleet-analytics"
 import { appRoutes } from "@/lib/routes"
 
 import { SectionTable } from "../shared/section-table"
 import { StatusBadge } from "../shared/status-badge"
-import { orders } from "./dashboard-data"
 
-export function RecentOrdersSection() {
+export function RecentOrdersSection({ orders }: { orders: DashboardOrderRow[] }) {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -27,33 +27,41 @@ export function RecentOrdersSection() {
           "Vehicles",
           "Amount",
           "Status",
-          "ETA",
+          "Date",
         ]}
       >
-        {orders.map((row) => (
-          <tr
-            key={row.id}
-            className="cursor-pointer border-b border-[#2A2A2A] transition-colors hover:bg-[#2A2A2A]"
-          >
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              <span className="font-medium text-[#DC2626]">{row.id}</span>
+        {orders.length ? (
+          orders.map((row) => (
+            <tr
+              key={row.id}
+              className="cursor-pointer border-b border-[#2A2A2A] transition-colors hover:bg-[#2A2A2A]"
+            >
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                <span className="font-medium text-[#DC2626]">{row.id}</span>
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                {row.supplier}
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">{row.items}</td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                {row.vehicles}
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                <span className="font-semibold text-white">{row.amount}</span>
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                <StatusBadge status={row.status} />
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">{row.date}</td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan={7} className="px-6 py-8 text-center text-sm text-[#9CA3AF]">
+              Recent orders will appear here after RFQ or cart checkout orders are created.
             </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              {row.supplier}
-            </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">{row.items}</td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              {row.vehicles}
-            </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              <span className="font-semibold text-white">{row.amount}</span>
-            </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              <StatusBadge status={row.status} />
-            </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">{row.eta}</td>
           </tr>
-        ))}
+        )}
       </SectionTable>
     </div>
   )

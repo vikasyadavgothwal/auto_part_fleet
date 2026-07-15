@@ -1,0 +1,121 @@
+import { NextResponse } from "next/server"
+
+const BACKEND_ACCESS_COOKIE = process.env.USER_ACCESS_COOKIE_NAME ?? "user_access_token"
+const BACKEND_REFRESH_COOKIE = process.env.USER_REFRESH_COOKIE_NAME ?? "user_refresh_token"
+export const FLEET_ACCESS_COOKIE = "fleet_access_token"
+export const FLEET_REFRESH_COOKIE = "fleet_refresh_token"
+
+const parseCookieHeader = (header: string | null) => {
+  const cookies = new Map<string, string>()
+  for (const segment of header?.split(";") ?? []) {
+    const index = segment.indexOf("=")
+    if (index > 0) {
+      cookies.set(segment.slice(0, index).trim(), segment.slice(index + 1).trim())
+    }
+  }
+  return cookies
+}
+
+export const toBackendCookieHeader = (header: string | null) => {
+  const cookies = parseCookieHeader(header)
+  const accessToken = cookies.get(FLEET_ACCESS_COOKIE)
+  const refreshToken = cookies.get(FLEET_REFRESH_COOKIE)
+  cookies.delete(BACKEND_ACCESS_COOKIE)
+  cookies.delete(BACKEND_REFRESH_COOKIE)
+  cookies.delete(FLEET_ACCESS_COOKIE)
+  cookies.delete(FLEET_REFRESH_COOKIE)
+  if (accessToken) cookies.set(BACKEND_ACCESS_COOKIE, accessToken)
+  if (refreshToken) cookies.set(BACKEND_REFRESH_COOKIE, refreshToken)
+  return Array.from(cookies, ([name, value]) => `${name}=${value}`).join("; ")
+}
+
+const dashboardCookieName = (name: string) => {
+  if (name === BACKEND_ACCESS_COOKIE) return FLEET_ACCESS_COOKIE
+  if (name === BACKEND_REFRESH_COOKIE) return FLEET_REFRESH_COOKIE
+  return name
+}
+
+const toDashboardSetCookie = (value: string) => {
+  const separator = value.indexOf("=")
+  if (separator <= 0) return value
+  return `${dashboardCookieName(value.slice(0, separator))}${value.slice(separator)}`
+}
+
+const backendUrl = (path: string) =>
+  new URL(
+    path,
+    process.env.ADMIN_API_BASE_URL?.trim() ||
+      process.env.BACKEND_URL?.trim() ||
+      "http://localhost:3000",
+  )
+
+export const getSetCookieHeaders = (headers: Headers) => {
+  const enhanced = headers as Headers & { getSetCookie?: () => string[] }
+  return enhanced.getSetCookie?.() ?? (headers.get("set-cookie") ? [headers.get("set-cookie")!] : [])
+}
+
+export const applySetCookieHeaders = (
+  response: NextResponse | Response,
+  values: string[],
+) => values.forEach((value) => response.headers.append("set-cookie", toDashboardSetCookie(value)))
+
+export const mergeCookieHeader = (current: string | null, values: string[]) => {
+  const cookies = parseCookieHeader(current)
+  for (const value of values) {
+    const pair = value.split(";", 1)[0]
+    const index = pair.indexOf("=")
+    if (index > 0) {
+      cookies.set(
+        dashboardCookieName(pair.slice(0, index).trim()),
+        pair.slice(index + 1).trim(),
+      )
+    }
+  }
+  return Array.from(cookies, ([name, value]) => `${name}=${value}`).join("; ")
+}
+
+export async function requestBackend(
+  path: string,
+  options: {
+    method?: string
+    cookieHeader?: string | null
+    body?: BodyInit | null
+    contentType?: string | null
+    userAgent?: string | null
+  } = {},
+) {
+  const headers = new Headers({ accept: "application/json" })
+  if (options.cookieHeader) {
+    headers.set("cookie", toBackendCookieHeader(options.cookieHeader))
+  }
+  if (options.contentType) headers.set("content-type", options.contentType)
+  if (options.userAgent) headers.set("user-agent", options.userAgent)
+  return fetch(backendUrl(path), {
+    method: options.method ?? "GET",
+    cache: "no-store",
+    headers,
+    body: options.body,
+  })
+}
+
+export async function forwardBackendRequest(request: Request, path: string) {
+  const sourceUrl = new URL(request.url)
+  const url = backendUrl(path)
+  url.search = sourceUrl.search
+  const method = request.method.toUpperCase()
+  const headers = new Headers({ accept: "application/json" })
+  const cookie = request.headers.get("cookie")
+  const contentType = request.headers.get("content-type")
+  if (cookie) headers.set("cookie", toBackendCookieHeader(cookie))
+  if (contentType) headers.set("content-type", contentType)
+  const response = await fetch(url, {
+    method,
+    cache: "no-store",
+    headers,
+    body: method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer(),
+  })
+  return new Response(await response.arrayBuffer(), {
+    status: response.status,
+    headers: { "content-type": response.headers.get("content-type") ?? "application/json" },
+  })
+}

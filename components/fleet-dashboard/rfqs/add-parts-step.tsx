@@ -14,6 +14,15 @@ type AddPartsStepProps = {
   ) => void
 }
 
+const digitsOnly = (value: string) => value.replace(/\D/g, "")
+
+const decimalOnly = (value: string) => {
+  const normalized = value.replace(/[^\d.]/g, "")
+  if (!/\d/.test(normalized)) return ""
+  const [whole, ...decimalParts] = normalized.split(".")
+  return decimalParts.length ? `${whole}.${decimalParts.join("").slice(0, 2)}` : whole
+}
+
 export function AddPartsStep({
   parts,
   canContinue,
@@ -98,16 +107,15 @@ export function AddPartsStep({
                     Quantity *
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min={1}
                     value={part.quantity}
-                    onChange={(e) =>
-                      onUpdatePart(
-                        part.id,
-                        "quantity",
-                        Number(e.target.value) || 1
-                      )
-                    }
+                    onChange={(e) => {
+                      const nextValue = digitsOnly(e.target.value)
+                      onUpdatePart(part.id, "quantity", Number(nextValue) || 1)
+                    }}
                     className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white transition-all focus:border-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/50"
                   />
                 </div>
@@ -118,10 +126,11 @@ export function AddPartsStep({
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., AED 125"
+                    inputMode="decimal"
+                    placeholder="e.g., 125"
                     value={part.targetPrice}
                     onChange={(e) =>
-                      onUpdatePart(part.id, "targetPrice", e.target.value)
+                      onUpdatePart(part.id, "targetPrice", decimalOnly(e.target.value))
                     }
                     className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white placeholder:text-[#4B5563] transition-all focus:border-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/50"
                   />

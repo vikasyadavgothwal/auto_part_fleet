@@ -1,23 +1,26 @@
 "use client"
 
-import {
-  Bell,
-  ChevronDown,
-  Search,
-  User,
-} from "lucide-react"
+import { Bell, ChevronDown, LogOut, Search, User } from "lucide-react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { NotificationPopup } from "@/components/notification-popup"
+import { getDashboardUserName, type DashboardUser } from "@/lib/auth/types"
+import { logoutFleet } from "@/lib/auth/client"
+import { appRoutes } from "@/lib/routes"
 
-export function DashboardHeader() {
+export function DashboardHeader({ user }: { user: DashboardUser }) {
+  const router = useRouter()
+  const [unreadNotifications, setUnreadNotifications] = useState(0)
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-brand-panel backdrop-blur-sm">
       <div className="flex h-16 items-center justify-between gap-4 px-4 lg:px-8">
@@ -45,10 +48,11 @@ export function DashboardHeader() {
                 className="relative text-brand-muted hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground"
               >
                 <Bell className="h-6 w-6" />
-                <span
-                  aria-hidden="true"
-                  className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border border-brand-panel bg-primary"
-                />
+                {unreadNotifications > 0 ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border border-brand-panel bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                    {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                  </span>
+                ) : null}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -56,21 +60,16 @@ export function DashboardHeader() {
               sideOffset={12}
               className="w-96 max-w-[calc(100vw-2rem)] overflow-hidden rounded-sm border border-border bg-brand-panel p-0 shadow-2xl shadow-black/40"
             >
-              <NotificationPopup />
+              <NotificationPopup onUnreadChange={setUnreadNotifications} />
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button
-            type="button"
-            variant="ghost"
-            className="flex items-center gap-2 rounded-sm bg-brand-panel-strong px-3 py-2 hover:bg-brand-panel-strong"
-          >
-            <User className="h-5 w-5 text-brand-muted" />
-            <span className="hidden text-sm font-medium text-foreground sm:inline">
-              ABC Fleet
-            </span>
-            <ChevronDown className="h-4 w-4 text-brand-muted" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button type="button" variant="ghost" className="flex items-center gap-2 rounded-sm bg-brand-panel-strong px-3 py-2"><User className="h-5 w-5 text-brand-muted" /><span className="hidden text-sm font-medium sm:inline">{getDashboardUserName(user)}</span><ChevronDown className="h-4 w-4" /></Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={async () => { await logoutFleet(); router.replace(appRoutes.login); router.refresh() }}><LogOut /> Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

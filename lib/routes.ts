@@ -29,6 +29,13 @@ export const appRoutes = {
   login: "/login",
 } as const
 
+export function appPath(path: string) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`
+  return normalizedPath === appBasePath || normalizedPath.startsWith(`${appBasePath}/`)
+    ? normalizedPath
+    : `${appBasePath}${normalizedPath === "/" ? "" : normalizedPath}`
+}
+
 export function stripBasePath(pathname: string | null) {
   if (!pathname) {
     return appRoutes.overview

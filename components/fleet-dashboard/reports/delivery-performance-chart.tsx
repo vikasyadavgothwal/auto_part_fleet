@@ -12,10 +12,9 @@ import {
 } from "recharts"
 
 import { Card, CardContent } from "@/components/ui/card"
+import type { DeliveryPerformancePoint } from "@/lib/fleet-analytics"
 
-import { deliveryData } from "./reports-data"
-
-export function DeliveryPerformanceChart() {
+export function DeliveryPerformanceChart({ data }: { data: DeliveryPerformancePoint[] }) {
   return (
     <Card className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] shadow-none">
       <CardContent className="p-6">
@@ -25,7 +24,7 @@ export function DeliveryPerformanceChart() {
 
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={deliveryData}>
+            <BarChart data={data}>
               <CartesianGrid stroke="#2A2A2A" strokeDasharray="3 3" />
 
               <XAxis dataKey="week" stroke="#9CA3AF" />

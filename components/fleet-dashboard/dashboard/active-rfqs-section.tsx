@@ -1,13 +1,13 @@
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
+import type { DashboardRfqRow } from "@/lib/fleet-analytics"
 import { appRoutes } from "@/lib/routes"
 
 import { SectionTable } from "../shared/section-table"
 import { StatusBadge } from "../shared/status-badge"
-import { rfqs } from "./dashboard-data"
 
-export function ActiveRfqsSection() {
+export function ActiveRfqsSection({ rfqs }: { rfqs: DashboardRfqRow[] }) {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -37,31 +37,39 @@ export function ActiveRfqsSection() {
           "Expires",
         ]}
       >
-        {rfqs.map((row) => (
-          <tr
-            key={row.id}
-            className="cursor-pointer border-b border-[#2A2A2A] transition-colors hover:bg-[#2A2A2A]"
-          >
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              <span className="font-medium text-[#DC2626]">{row.id}</span>
-            </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              {row.vehicles}
-            </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">{row.parts}</td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              <span className="font-semibold text-[#DC2626]">
-                {row.quotes}
-              </span>
-            </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              <StatusBadge status={row.status} />
-            </td>
-            <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-              {row.expires}
+        {rfqs.length ? (
+          rfqs.map((row) => (
+            <tr
+              key={row.id}
+              className="cursor-pointer border-b border-[#2A2A2A] transition-colors hover:bg-[#2A2A2A]"
+            >
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                <span className="font-medium text-[#DC2626]">{row.id}</span>
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                {row.vehicles}
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">{row.parts}</td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                <span className="font-semibold text-[#DC2626]">
+                  {row.quotes}
+                </span>
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                <StatusBadge status={row.status} />
+              </td>
+              <td className="px-6 py-4 text-sm text-[#9CA3AF]">
+                {row.expires}
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan={6} className="px-6 py-8 text-center text-sm text-[#9CA3AF]">
+              Active RFQs will appear here after you create a request.
             </td>
           </tr>
-        ))}
+        )}
       </SectionTable>
     </div>
   )

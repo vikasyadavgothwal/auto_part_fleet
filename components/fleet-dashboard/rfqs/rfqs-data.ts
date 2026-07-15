@@ -1,48 +1,67 @@
-export const stats = [
-  { title: "Total RFQs", value: "3", valueClass: "text-white" },
-  { title: "Active", value: "2", valueClass: "text-[#DC2626]" },
-  { title: "Total Quotes", value: "25", valueClass: "text-white" },
-  { title: "Potential Savings", value: "AED 324", valueClass: "text-white" },
-]
+export type FleetRfqBid = {
+  id: string
+  totalAmount: number
+  deliveryDays: number
+  partType: string
+  validUntil: string | null
+  notes: string | null
+  status: "submitted" | "accepted" | "rejected" | "withdrawn"
+  createdAt: string
+  supplier: {
+    id: string
+    supplierPublicId?: string | null
+    companyName: string | null
+    firstName: string | null
+    lastName: string | null
+    email: string | null
+  }
+}
 
-export const rfqs = [
-  {
-    id: "RFQ-F001",
-    date: "2024-01-22",
-    parts: "Brake Pads (Multiple)",
-    vehicles: "4 units",
-    quotes: "8 received",
-    bestPrice: "AED 359.96",
-    status: "Active",
-    expires: "3 days",
-    action: "View Quotes",
-    actionPrimary: true,
-  },
-  {
-    id: "RFQ-F002",
-    date: "2024-01-20",
-    parts: "Oil Filters",
-    vehicles: "6 units",
-    quotes: "12 received",
-    bestPrice: "AED 77.94",
-    status: "Active",
-    expires: "5 days",
-    action: "View Quotes",
-    actionPrimary: true,
-  },
-  {
-    id: "RFQ-F003",
-    date: "2024-01-18",
-    parts: "Tires (Full Set)",
-    vehicles: "2 units",
-    quotes: "5 received",
-    bestPrice: "AED 1,199.00",
-    status: "Accepted",
-    expires: "Completed",
-    action: "View",
-    actionPrimary: false,
-  },
-]
+export type FleetRfq = {
+  id: string
+  publicId: string
+  status: "open" | "closed" | "cancelled"
+  projectName: string
+  description: string | null
+  responseDeadline: string
+  deliveryRequirement: string
+  paymentTerms: string
+  companyName: string
+  contactName: string
+  email: string
+  phone: string
+  vehicleVin: string | null
+  vehicleYear: number | null
+  vehicleMake: string | null
+  vehicleModel: string | null
+  vehicleTrim: string | null
+  attachmentUrl: string | null
+  attachmentName: string | null
+  createdAt: string
+  parts: Array<{
+    id: string
+    partName: string
+    partNumber: string | null
+    quantity: number
+    targetPrice: number | null
+    notes: string | null
+  }>
+  bids: FleetRfqBid[]
+  order: {
+    id: string
+    publicId: string
+    bidId: string
+    totalAmount: number
+    status: string
+  } | null
+}
+
+export type RfqPagination = {
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
 
 export const benefits = [
   {

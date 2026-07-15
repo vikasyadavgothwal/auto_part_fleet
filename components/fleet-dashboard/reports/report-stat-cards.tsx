@@ -1,14 +1,20 @@
-import { TrendingDown, TrendingUp } from "lucide-react"
+import { AlertCircle, Banknote, Clock, Package, TrendingDown, TrendingUp } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
+import type { FleetReportStat } from "@/lib/fleet-analytics"
 
-import { stats } from "./reports-data"
+const icons = {
+  alert: AlertCircle,
+  banknote: Banknote,
+  clock: Clock,
+  package: Package,
+}
 
-export function ReportStatCards() {
+export function ReportStatCards({ stats }: { stats: FleetReportStat[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
       {stats.map((stat) => {
-        const Icon = stat.icon
+        const Icon = icons[stat.iconKey]
 
         return (
           <Card

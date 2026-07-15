@@ -1,35 +1,36 @@
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
+import type { FleetVehicle } from "@/components/fleet-dashboard/vehicles/types"
 
 type RfqDetailsStepProps = {
   projectName: string
   description: string
   deadline: string
-  deliveryRequirement: string
-  paymentTerms: string
+  vehicles: FleetVehicle[]
+  selectedVehicleId: string
   canContinue: boolean
   onBack: () => void
   onNext: () => void
   onProjectNameChange: (value: string) => void
   onDescriptionChange: (value: string) => void
   onDeadlineChange: (value: string) => void
-  onDeliveryRequirementChange: (value: string) => void
-  onPaymentTermsChange: (value: string) => void
+  onVehicleChange: (value: string) => void
+  onAttachmentChange: (file: File | null) => void
 }
 
 export function RfqDetailsStep({
   projectName,
   description,
   deadline,
-  deliveryRequirement,
-  paymentTerms,
+  vehicles,
+  selectedVehicleId,
   canContinue,
   onBack,
   onNext,
   onProjectNameChange,
   onDescriptionChange,
   onDeadlineChange,
-  onDeliveryRequirementChange,
-  onPaymentTermsChange,
+  onVehicleChange,
+  onAttachmentChange,
 }: RfqDetailsStepProps) {
   return (
     <div>
@@ -42,6 +43,13 @@ export function RfqDetailsStep({
 
       <div className="space-y-6 rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-8">
         <div>
+          <label className="mb-2 block text-sm font-medium text-white">Fleet Vehicle *</label>
+          <select value={selectedVehicleId} onChange={(event) => onVehicleChange(event.target.value)} className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white" required>
+            <option value="">Select a vehicle</option>
+            {vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.vehicleName} · {vehicle.vin}</option>)}
+          </select>
+        </div>
+        <div>
           <label className="mb-2 block text-sm font-medium text-white">
             Project Name *
           </label>
@@ -52,6 +60,12 @@ export function RfqDetailsStep({
             onChange={(e) => onProjectNameChange(e.target.value)}
             className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white placeholder:text-[#4B5563] transition-all focus:border-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/50"
           />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-white">Attach document (optional)</label>
+          <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(event) => onAttachmentChange(event.target.files?.[0] ?? null)} className="block w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] p-3 text-sm text-[#9CA3AF]" />
+          <p className="mt-2 text-xs text-[#9CA3AF]">PDF, PNG, or JPG up to 10 MB.</p>
         </div>
 
         <div>
@@ -82,37 +96,6 @@ export function RfqDetailsStep({
           </div>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-white">
-            Delivery Requirements
-          </label>
-          <select
-            value={deliveryRequirement}
-            onChange={(e) => onDeliveryRequirementChange(e.target.value)}
-            className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white transition-all focus:border-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/50"
-          >
-            <option>Standard Delivery</option>
-            <option>Express Delivery</option>
-            <option>Next Day Delivery</option>
-            <option>Same Day Delivery</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium text-white">
-            Payment Terms
-          </label>
-          <select
-            value={paymentTerms}
-            onChange={(e) => onPaymentTermsChange(e.target.value)}
-            className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white transition-all focus:border-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/50"
-          >
-            <option>Net 30</option>
-            <option>Net 60</option>
-            <option>Net 90</option>
-            <option>Due on Receipt</option>
-          </select>
-        </div>
       </div>
 
       <div className="mt-12 flex gap-4">
