@@ -298,12 +298,13 @@ export function RfqsTable({ rfqs, onAccepted }: {
             {!selected.order && selected.status === "open" ? renderAddressSelector("fleet-rfq-order-address") : null}
             <div>
               <h3 className="mb-3 font-semibold">Supplier quotes ({selected.bids.length})</h3>
-              {selected.bids.length === 0 ? <p className="rounded-lg border border-[#2A2A2A] p-5 text-[#9CA3AF]">No supplier quotes received yet.</p> : (
+              {selected.bids.length === 0 ? <p className="rounded-lg border border-[#2A2A2A] p-5 text-[#9CA3AF]">No supplier quotes received yet. A quote will appear here after a supplier enters an AED price for every requested part and submits the complete quote.</p> : (
                 <div className="space-y-3">{selected.bids.map((bid) => {
                   const supplierName = bid.supplier.companyName || [bid.supplier.firstName, bid.supplier.lastName].filter(Boolean).join(" ") || bid.supplier.email || "Supplier"
-                  return <div key={bid.id} className="flex flex-col gap-4 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4 md:flex-row md:items-center md:justify-between">
-                    <div><p className="font-semibold">{supplierName}</p><p className="mt-1 text-sm text-[#9CA3AF]">Part type: {bid.partType || "New"} · Delivery in {bid.deliveryDays} days{bid.notes ? ` · ${bid.notes}` : ""}</p><p className="mt-1 text-xs capitalize text-[#9CA3AF]">{bid.status}</p></div>
-                    <div className="flex items-center gap-4"><strong className="text-lg">{money(bid.totalAmount)}</strong>{selected.status === "open" && bid.status === "submitted" ? <Button disabled={Boolean(accepting)} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : null}</div>
+                  return <div key={bid.id} className="space-y-4 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold">{supplierName}</p><p className="mt-1 text-sm text-[#9CA3AF]">Delivery in {bid.deliveryDays} days{bid.notes ? ` · ${bid.notes}` : ""}</p><p className="mt-1 text-xs capitalize text-[#9CA3AF]">{bid.status}</p></div>
+                    <div className="flex items-center gap-4"><strong className="text-lg">{money(bid.totalAmount)}</strong>{selected.status === "open" && bid.status === "submitted" ? <Button disabled={Boolean(accepting) || bid.items.length !== selected.parts.length} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : null}</div></div>
+                    {bid.items.length === selected.parts.length ? <div className="overflow-x-auto rounded-lg border border-[#2A2A2A]"><table className="w-full min-w-[560px] text-sm"><thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th className="p-3 text-left">Quoted part</th><th className="p-3 text-left">Qty</th><th className="p-3 text-left">Condition</th><th className="p-3 text-right">Unit (AED)</th><th className="p-3 text-right">Line total (AED)</th></tr></thead><tbody>{selected.parts.map((part) => { const item = bid.items.find((entry) => entry.rfqPartId === part.id)!; return <tr key={part.id} className="border-t border-[#2A2A2A]"><td className="p-3">{part.partName}{part.partNumber ? ` (${part.partNumber})` : ""}</td><td className="p-3">{part.quantity}</td><td className="p-3">{item.partType}</td><td className="p-3 text-right">{money(item.unitPrice)}</td><td className="p-3 text-right font-medium">{money(item.lineTotal)}</td></tr> })}</tbody></table></div> : <p className="text-sm text-red-400">This supplier must update the quote with a price for every part before it can be accepted.</p>}
                   </div>
                 })}</div>
               )}
@@ -326,7 +327,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
           <div className="space-y-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4 text-sm">
             <div className="flex justify-between gap-4"><span className="text-[#9CA3AF]">Supplier</span><span className="text-right font-medium">{confirmBid.supplier.companyName || [confirmBid.supplier.firstName, confirmBid.supplier.lastName].filter(Boolean).join(" ") || confirmBid.supplier.email || "Supplier"}</span></div>
             <div className="flex justify-between gap-4"><span className="text-[#9CA3AF]">Total quote</span><strong>{money(confirmBid.totalAmount)}</strong></div>
-            <div className="flex justify-between gap-4"><span className="text-[#9CA3AF]">Part type</span><span>{confirmBid.partType || "New"}</span></div>
+            {selected?.parts.map((part) => { const item = confirmBid.items.find((entry) => entry.rfqPartId === part.id); return item ? <div key={part.id} className="border-t border-[#2A2A2A] pt-3"><div className="flex justify-between gap-4"><span>{part.partName} × {part.quantity}</span><strong>{money(item.lineTotal)}</strong></div><p className="mt-1 text-xs text-[#9CA3AF]">{item.partType} · {money(item.unitPrice)} each</p></div> : null })}
             <div className="flex justify-between gap-4"><span className="text-[#9CA3AF]">Delivery</span><span>{confirmBid.deliveryDays} days</span></div>
           </div>
           {renderAddressSelector("fleet-confirm-order-address")}

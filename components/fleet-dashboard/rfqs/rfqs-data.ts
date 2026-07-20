@@ -7,6 +7,13 @@ export type FleetRfqBid = {
   notes: string | null
   status: "submitted" | "accepted" | "rejected" | "withdrawn"
   createdAt: string
+  items: Array<{
+    id: string
+    rfqPartId: string
+    unitPrice: number
+    lineTotal: number
+    partType: string
+  }>
   supplier: {
     id: string
     supplierPublicId?: string | null
