@@ -7,6 +7,7 @@ type RfqDetailsStepProps = {
   deadline: string
   vehicles: FleetVehicle[]
   selectedVehicleId: string
+  vehicleCount: number
   canContinue: boolean
   onBack: () => void
   onNext: () => void
@@ -23,6 +24,7 @@ export function RfqDetailsStep({
   deadline,
   vehicles,
   selectedVehicleId,
+  vehicleCount,
   canContinue,
   onBack,
   onNext,
@@ -37,18 +39,20 @@ export function RfqDetailsStep({
       <div className="mb-8">
         <h2 className="mb-2 text-3xl font-bold text-white">RFQ Details</h2>
         <p className="text-[#9CA3AF]">
-          Provide information about this quote request
+          {vehicleCount > 1
+            ? `${vehicleCount} vehicles are linked to the requested parts. Complete the request details below.`
+            : "Confirm the vehicle and request details below."}
         </p>
       </div>
 
       <div className="space-y-6 rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-8">
-        <div>
+        {vehicleCount <= 1 ? <div>
           <label className="mb-2 block text-sm font-medium text-white">Fleet Vehicle *</label>
           <select value={selectedVehicleId} onChange={(event) => onVehicleChange(event.target.value)} className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white" required>
             <option value="">Select a vehicle</option>
             {vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.vehicleName} · {vehicle.vin}</option>)}
           </select>
-        </div>
+        </div> : null}
         <div>
           <label className="mb-2 block text-sm font-medium text-white">
             Project Name *

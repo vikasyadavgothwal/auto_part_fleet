@@ -52,6 +52,9 @@ const vehicleFields = [
   ["trim", "Trim", "text"],
 ] as const
 
+const createVehicleFields = vehicleFields.filter(([name]) => name !== "vin")
+const normalizeVin = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 17)
+
 export function VehiclesPageContent({
   initialVehicles,
   initialPagination,
@@ -68,6 +71,11 @@ export function VehiclesPageContent({
   const [pageError, setPageError] = useState(initialError ?? "")
   const [dialogError, setDialogError] = useState("")
   const [deleteError, setDeleteError] = useState("")
+  const [createVin, setCreateVin] = useState("")
+  const [vinLookupPending, setVinLookupPending] = useState(false)
+  const [vinLookupMessage, setVinLookupMessage] = useState("")
+  const [resolvedVehicle, setResolvedVehicle] = useState<{ year: number; make: string; model: string; vehicleName: string; trim: string } | null>(null)
+  const [manualVehicleEntry, setManualVehicleEntry] = useState(false)
 
   async function loadPage(page: number) {
     setPending(true)
@@ -92,6 +100,10 @@ export function VehiclesPageContent({
   function openCreateDialog() {
     setEditingVehicle(null)
     setDialogError("")
+    setCreateVin("")
+    setVinLookupMessage("")
+    setResolvedVehicle(null)
+    setManualVehicleEntry(false)
     setVehicleDialogOpen(true)
   }
 
@@ -99,6 +111,35 @@ export function VehiclesPageContent({
     setEditingVehicle(vehicle)
     setDialogError("")
     setVehicleDialogOpen(true)
+  }
+
+  async function lookupVin() {
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(createVin)) {
+      setVinLookupMessage("VIN must be exactly 17 characters and cannot include I, O, or Q.")
+      return
+    }
+    setVinLookupPending(true)
+    setVinLookupMessage("")
+    try {
+      const response = await authenticatedFetch(appPath(`/api/fleet/vehicles/vin-lookup?vin=${encodeURIComponent(createVin)}`))
+      const payload = await response.json() as { ok: boolean; found?: boolean; vehicle?: { year: number; make: string; model: string; vehicleName: string; trim: string }; message?: string }
+      if (!response.ok || !payload.ok) throw new Error(payload.message ?? "Unable to look up VIN")
+      if (payload.found && payload.vehicle) {
+        setResolvedVehicle(payload.vehicle)
+        setManualVehicleEntry(false)
+        setVinLookupMessage("Vehicle found. Year, make and model were filled automatically.")
+      } else {
+        setResolvedVehicle(null)
+        setManualVehicleEntry(true)
+        setVinLookupMessage(payload.message ?? "Vehicle details were not found. Check the VIN or enter them manually.")
+      }
+    } catch (error) {
+      setResolvedVehicle(null)
+      setManualVehicleEntry(true)
+      setVinLookupMessage(error instanceof Error ? error.message : "Unable to look up VIN")
+    } finally {
+      setVinLookupPending(false)
+    }
   }
 
   async function saveVehicle(event: FormEvent<HTMLFormElement>) {
@@ -304,8 +345,21 @@ export function VehiclesPageContent({
             <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{dialogError}</p>
           ) : null}
           <form key={editingVehicle?.id ?? "create"} className="space-y-5" onSubmit={saveVehicle}>
+            {!editingVehicle ? (
+              <div className="space-y-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4">
+                <Label htmlFor="create-vin">VIN first</Label>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Input id="create-vin" name="vin" value={createVin} maxLength={17} required placeholder="JT2BF22K6X0123456" className="bg-[#0A0A0A] uppercase" onChange={(event) => { setCreateVin(normalizeVin(event.target.value)); setResolvedVehicle(null); setManualVehicleEntry(false); setVinLookupMessage("") }} />
+                  <Button type="button" disabled={vinLookupPending || createVin.length !== 17} onClick={() => void lookupVin()}>{vinLookupPending ? "Searching..." : "Find Vehicle"}</Button>
+                </div>
+                {vinLookupMessage ? <p className="text-sm text-[#9CA3AF]">{vinLookupMessage}</p> : null}
+                {manualVehicleEntry && vinLookupMessage ? <p className="text-xs text-[#9CA3AF]">Enter the vehicle details below to save this VIN manually.</p> : null}
+                {!resolvedVehicle && !manualVehicleEntry && vinLookupMessage ? <Button type="button" variant="outline" onClick={() => setManualVehicleEntry(true)}>Enter details manually</Button> : null}
+              </div>
+            ) : null}
+            {editingVehicle || resolvedVehicle || manualVehicleEntry ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              {vehicleFields.map(([name, label, type]) => (
+              {(editingVehicle ? vehicleFields : createVehicleFields).map(([name, label, type]) => (
                 <div key={name} className="space-y-2">
                   <Label htmlFor={name}>{label}</Label>
                   <Input
@@ -313,7 +367,8 @@ export function VehiclesPageContent({
                     name={name}
                     type={type}
                     min={type === "number" ? 0 : undefined}
-                    defaultValue={editingVehicle?.[name] ?? ""}
+                    defaultValue={editingVehicle?.[name] ?? (name === "year" ? resolvedVehicle?.year : name === "make" ? resolvedVehicle?.make : name === "model" ? resolvedVehicle?.model : name === "vehicleName" ? resolvedVehicle?.vehicleName : name === "trim" ? resolvedVehicle?.trim : "")}
+                    readOnly={!editingVehicle && Boolean(resolvedVehicle) && ["year", "make", "model", "vehicleName"].includes(name)}
                     required={!['driver', 'trim'].includes(name)}
                     className="bg-[#0A0A0A]"
                   />
@@ -334,9 +389,10 @@ export function VehiclesPageContent({
                 </label>
               </div>
             </div>
+            ) : null}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setVehicleDialogOpen(false)} disabled={pending}>Cancel</Button>
-              <Button type="submit" disabled={pending}>{pending ? "Saving..." : editingVehicle ? "Save changes" : "Add vehicle"}</Button>
+              <Button type="submit" disabled={pending || vinLookupPending || (!editingVehicle && !resolvedVehicle && !manualVehicleEntry)}>{pending ? "Saving..." : editingVehicle ? "Save changes" : "Add vehicle"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -87,6 +87,7 @@ export function ReviewRfqStep({
                   <div className="mb-2 text-sm text-[#9CA3AF]">
                     Part #: {part.partNumber || "-"}
                   </div>
+                  {part.vin ? <div className="mb-2 text-sm text-[#9CA3AF]">VIN: {part.vin}</div> : null}
                   <div className="flex items-center gap-6 text-sm">
                     <span className="text-white">
                       Qty:{" "}

@@ -150,6 +150,8 @@ export function RfqsTable({ rfqs, onAccepted }: {
       const payload = await response.json() as { ok: boolean; order?: NonNullable<FleetRfq["order"]>; message?: string }
       if (!response.ok || !payload.ok || !payload.order) throw new Error(payload.message || "Unable to accept quote")
       onAccepted(selected.id, bidId, payload.order)
+      window.alert("Payment Successful")
+      window.alert("Your order has been created successfully.")
       setConfirmBidId(null)
       setSelectedAddressId("")
     } catch (caught) {
@@ -224,7 +226,8 @@ export function RfqsTable({ rfqs, onAccepted }: {
     >
       {rfqs.map((rfq) => {
         const bestBid = rfq.bids.filter((bid) => bid.status === "submitted" || bid.status === "accepted")[0]
-        const vehicle = [rfq.vehicleYear, rfq.vehicleMake, rfq.vehicleModel].filter(Boolean).join(" ")
+        const vehicleCount = new Set(rfq.parts.map((part) => part.vehicleVin).filter(Boolean)).size
+        const vehicle = vehicleCount > 1 ? `${vehicleCount} vehicles` : [rfq.vehicleYear, rfq.vehicleMake, rfq.vehicleModel].filter(Boolean).join(" ")
         return (
         <tr
           key={rfq.id}
@@ -281,34 +284,21 @@ export function RfqsTable({ rfqs, onAccepted }: {
         {selected ? (
           <div className="space-y-6">
             <div className="grid gap-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4 text-sm md:grid-cols-2">
-              <p><span className="text-[#9CA3AF]">Vehicle:</span> {[selected.vehicleYear, selected.vehicleMake, selected.vehicleModel, selected.vehicleTrim].filter(Boolean).join(" ")}</p>
-              <p><span className="text-[#9CA3AF]">VIN:</span> {selected.vehicleVin || "-"}</p>
+              {new Set(selected.parts.map((part) => part.vehicleVin).filter(Boolean)).size <= 1 ? <><p><span className="text-[#9CA3AF]">Vehicle:</span> {[selected.vehicleYear, selected.vehicleMake, selected.vehicleModel, selected.vehicleTrim].filter(Boolean).join(" ")}</p><p><span className="text-[#9CA3AF]">VIN:</span> {selected.vehicleVin || "-"}</p></> : null}
               <p><span className="text-[#9CA3AF]">Deadline:</span> {new Date(selected.responseDeadline).toLocaleString("en-AE")}</p>
               {selected.order ? <p><span className="text-[#9CA3AF]">Order:</span> <strong className="text-green-500">{selected.order.publicId}</strong></p> : null}
             </div>
             <div>
-              <h3 className="mb-3 font-semibold">Requested parts</h3>
+              <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-semibold">Requested parts</h3><span className="text-sm text-[#9CA3AF]">Supplier quotations ({selected.bids.length})</span></div>
               <div className="overflow-x-auto rounded-lg border border-[#2A2A2A]">
-                <table className="w-full min-w-[600px] text-sm">
-                  <thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th className="p-3 text-left">Part</th><th className="p-3 text-left">Number</th><th className="p-3 text-left">Qty</th><th className="p-3 text-left">Target</th></tr></thead>
-                  <tbody>{selected.parts.map((part) => <tr key={part.id} className="border-t border-[#2A2A2A]"><td className="p-3">{part.partName}</td><td className="p-3">{part.partNumber || "-"}</td><td className="p-3">{part.quantity}</td><td className="p-3">{part.targetPrice === null ? "-" : money(part.targetPrice)}</td></tr>)}</tbody>
+                <table className="w-full min-w-[760px] text-sm">
+                  <thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th rowSpan={2} className="p-3 text-left">VIN</th><th rowSpan={2} className="p-3 text-left">Part</th><th rowSpan={2} className="p-3 text-left">Number</th><th rowSpan={2} className="p-3 text-left">Qty</th><th rowSpan={2} className="p-3 text-left">Target</th>{selected.bids.map((bid, index) => { const name = bid.supplier.companyName || [bid.supplier.firstName, bid.supplier.lastName].filter(Boolean).join(" ") || bid.supplier.email || "Supplier"; return <th key={bid.id} colSpan={3} className="border-l border-[#2A2A2A] p-3 text-left"><div className="flex min-w-[310px] items-center justify-between gap-3"><div><p className="font-semibold text-white">Vendor {index + 1}</p><p className="text-xs font-normal">{name} · {money(bid.totalAmount)} · {bid.deliveryDays} days</p></div>{selected.status === "open" && bid.status === "submitted" ? <Button size="sm" disabled={Boolean(accepting)} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : <span className="text-xs capitalize">{bid.status}</span>}</div></th> })}</tr><tr>{selected.bids.map((bid) => <React.Fragment key={bid.id}><th className="border-l border-t border-[#2A2A2A] p-2 text-left">Condition</th><th className="border-t border-[#2A2A2A] p-2 text-right">Unit Price</th><th className="border-t border-[#2A2A2A] p-2 text-right">Line Total</th></React.Fragment>)}</tr></thead>
+                  <tbody>{selected.parts.map((part) => <tr key={part.id} className="border-t border-[#2A2A2A]"><td className="p-3 font-mono text-xs">{part.vehicleVin || selected.vehicleVin || "-"}</td><td className="p-3 font-medium text-white">{part.partName}</td><td className="p-3">{part.partNumber || "-"}</td><td className="p-3">{part.quantity}</td><td className="p-3">{part.targetPrice === null ? "-" : money(part.targetPrice)}</td>{selected.bids.map((bid) => { const item = bid.items.find((entry) => entry.rfqPartId === part.id); return <React.Fragment key={bid.id}><td className="border-l border-[#2A2A2A] p-3">{item?.partType || "Pending"}</td><td className="p-3 text-right">{item ? money(item.unitPrice) : "-"}</td><td className="p-3 text-right font-medium text-white">{item ? money(item.lineTotal) : "-"}</td></React.Fragment> })}</tr>)}</tbody>
                 </table>
               </div>
+              {!selected.bids.length ? <p className="border-x border-b border-[#2A2A2A] p-4 text-sm text-[#9CA3AF]">No supplier quotations received yet.</p> : null}
             </div>
             {!selected.order && selected.status === "open" ? renderAddressSelector("fleet-rfq-order-address") : null}
-            <div>
-              <h3 className="mb-3 font-semibold">Supplier quotes ({selected.bids.length})</h3>
-              {selected.bids.length === 0 ? <p className="rounded-lg border border-[#2A2A2A] p-5 text-[#9CA3AF]">No supplier quotes received yet. A quote will appear here after a supplier enters an AED price for every requested part and submits the complete quote.</p> : (
-                <div className="space-y-3">{selected.bids.map((bid) => {
-                  const supplierName = bid.supplier.companyName || [bid.supplier.firstName, bid.supplier.lastName].filter(Boolean).join(" ") || bid.supplier.email || "Supplier"
-                  return <div key={bid.id} className="space-y-4 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold">{supplierName}</p><p className="mt-1 text-sm text-[#9CA3AF]">Delivery in {bid.deliveryDays} days{bid.notes ? ` · ${bid.notes}` : ""}</p><p className="mt-1 text-xs capitalize text-[#9CA3AF]">{bid.status}</p></div>
-                    <div className="flex items-center gap-4"><strong className="text-lg">{money(bid.totalAmount)}</strong>{selected.status === "open" && bid.status === "submitted" ? <Button disabled={Boolean(accepting) || bid.items.length !== selected.parts.length} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : null}</div></div>
-                    {bid.items.length === selected.parts.length ? <div className="overflow-x-auto rounded-lg border border-[#2A2A2A]"><table className="w-full min-w-[560px] text-sm"><thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th className="p-3 text-left">Quoted part</th><th className="p-3 text-left">Qty</th><th className="p-3 text-left">Condition</th><th className="p-3 text-right">Unit (AED)</th><th className="p-3 text-right">Line total (AED)</th></tr></thead><tbody>{selected.parts.map((part) => { const item = bid.items.find((entry) => entry.rfqPartId === part.id)!; return <tr key={part.id} className="border-t border-[#2A2A2A]"><td className="p-3">{part.partName}{part.partNumber ? ` (${part.partNumber})` : ""}</td><td className="p-3">{part.quantity}</td><td className="p-3">{item.partType}</td><td className="p-3 text-right">{money(item.unitPrice)}</td><td className="p-3 text-right font-medium">{money(item.lineTotal)}</td></tr> })}</tbody></table></div> : <p className="text-sm text-red-400">This supplier must update the quote with a price for every part before it can be accepted.</p>}
-                  </div>
-                })}</div>
-              )}
-            </div>
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
           </div>
         ) : null}

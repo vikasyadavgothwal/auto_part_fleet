@@ -15,6 +15,11 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+Fleet RFQs support CSV, XLSX, and XLS imports with exactly five columns: `VIN
+No`, `Quantity`, `Price`, `Part Number`, and `Part Name`. Mixed VIN files are
+grouped into one RFQ per vehicle. Adding a fleet vehicle starts with a cached
+VIN lookup, falls back to 17VIN, and permits manual details when unresolved.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -59,7 +64,12 @@ Detected or documented variables:
 - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
 - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
 - `NEXT_PUBLIC_FIREBASE_APP_ID`
+- `NEXT_PUBLIC_FIREBASE_VAPID_KEY`
 - `NEXT_PUBLIC_BASE_PATH`
+
+Firebase push notifications require `NEXT_PUBLIC_FIREBASE_VAPID_KEY` plus the
+Firebase web config. The dashboard registers the browser token only after login
+and browser notification permission.
 
 ### Run, Build, and Test Commands
 
