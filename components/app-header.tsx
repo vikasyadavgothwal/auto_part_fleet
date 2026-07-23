@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, ChevronDown, LogOut, Search, User } from "lucide-react"
+import { Bell, ChevronDown, ExternalLink, LogOut, Search, User } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -17,6 +17,7 @@ import { NotificationLiveListener } from "@/components/notification-live-listene
 import { NotificationPopup } from "@/components/notification-popup"
 import { getDashboardUserName, type DashboardUser } from "@/lib/auth/types"
 import { logoutFleet } from "@/lib/auth/client"
+import { mainWebsiteUrl } from "@/lib/main-website-url"
 import { appRoutes } from "@/lib/routes"
 
 export function DashboardHeader({ user }: { user: DashboardUser }) {
@@ -68,10 +69,23 @@ export function DashboardHeader({ user }: { user: DashboardUser }) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button type="button" variant="ghost" className="flex items-center gap-2 rounded-sm bg-brand-panel-strong px-3 py-2"><User className="h-5 w-5 text-brand-muted" /><span className="hidden text-sm font-medium sm:inline">{getDashboardUserName(user)}</span><ChevronDown className="h-4 w-4" /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56 p-2">
               <DropdownMenuItem onSelect={async () => { await logoutFleet(); router.replace(appRoutes.login); router.refresh() }}><LogOut /> Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            asChild
+            aria-label="Open main website"
+            title="Main website"
+            className="text-brand-muted hover:bg-muted hover:text-foreground"
+          >
+            <a href={mainWebsiteUrl()}>
+              <ExternalLink className="h-5 w-5" />
+            </a>
+          </Button>
         </div>
       </div>
     </header>

@@ -83,7 +83,7 @@ export function AddPartsStep({
               Import CSV or Excel
             </h3>
             <p className="text-sm text-[#9CA3AF]">
-              Columns: VIN No, Quantity, Price, Part Number, Part Name
+              Columns: VIN No, Quantity, Target Price, Part Number, Part Name
             </p>
           </div>
           <span className="rounded-lg bg-[#DC2626] px-4 py-2 font-medium text-white transition-all hover:bg-[#B91C1C]">{isImporting ? "Importing..." : "Choose File"}</span>

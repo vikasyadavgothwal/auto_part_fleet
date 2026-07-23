@@ -16,7 +16,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 Fleet RFQs support CSV, XLSX, and XLS imports with exactly five columns: `VIN
-No`, `Quantity`, `Price`, `Part Number`, and `Part Name`. Mixed VIN files are
+No`, `Quantity`, `Target Price`, `Part Number`, and `Part Name`. Mixed VIN files are
 grouped into one RFQ per vehicle. Adding a fleet vehicle starts with a cached
 VIN lookup, falls back to 17VIN, and permits manual details when unresolved.
 

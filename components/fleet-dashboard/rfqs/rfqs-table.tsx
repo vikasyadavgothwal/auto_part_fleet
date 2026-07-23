@@ -22,6 +22,23 @@ import type { FleetRfq } from "./rfqs-data"
 
 const money = (value: number) => `AED ${value.toLocaleString("en-AE", { minimumFractionDigits: 2 })}`
 
+const deliveryOptionLabel = (value: string | null | undefined) => {
+  switch (value) {
+    case "24_hours":
+      return "24 hours"
+    case "48_hours":
+      return "48 hours"
+    case "72_hours":
+      return "72 hours"
+    case "one_month":
+      return "One month"
+    case "more_than_one_month":
+      return "More than one month"
+    default:
+      return "-"
+  }
+}
+
 const expiryLabel = (rfq: FleetRfq) => {
   if (rfq.status !== "open") return "Completed"
   const today = new Date()
@@ -292,8 +309,8 @@ export function RfqsTable({ rfqs, onAccepted }: {
               <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-semibold">Requested parts</h3><span className="text-sm text-[#9CA3AF]">Supplier quotations ({selected.bids.length})</span></div>
               <div className="overflow-x-auto rounded-lg border border-[#2A2A2A]">
                 <table className="w-full min-w-[760px] text-sm">
-                  <thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th rowSpan={2} className="p-3 text-left">VIN</th><th rowSpan={2} className="p-3 text-left">Part</th><th rowSpan={2} className="p-3 text-left">Number</th><th rowSpan={2} className="p-3 text-left">Qty</th><th rowSpan={2} className="p-3 text-left">Target</th>{selected.bids.map((bid, index) => { const name = bid.supplier.companyName || [bid.supplier.firstName, bid.supplier.lastName].filter(Boolean).join(" ") || bid.supplier.email || "Supplier"; return <th key={bid.id} colSpan={3} className="border-l border-[#2A2A2A] p-3 text-left"><div className="flex min-w-[310px] items-center justify-between gap-3"><div><p className="font-semibold text-white">Vendor {index + 1}</p><p className="text-xs font-normal">{name} · {money(bid.totalAmount)} · {bid.deliveryDays} days</p></div>{selected.status === "open" && bid.status === "submitted" ? <Button size="sm" disabled={Boolean(accepting)} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : <span className="text-xs capitalize">{bid.status}</span>}</div></th> })}</tr><tr>{selected.bids.map((bid) => <React.Fragment key={bid.id}><th className="border-l border-t border-[#2A2A2A] p-2 text-left">Condition</th><th className="border-t border-[#2A2A2A] p-2 text-right">Unit Price</th><th className="border-t border-[#2A2A2A] p-2 text-right">Line Total</th></React.Fragment>)}</tr></thead>
-                  <tbody>{selected.parts.map((part) => <tr key={part.id} className="border-t border-[#2A2A2A]"><td className="p-3 font-mono text-xs">{part.vehicleVin || selected.vehicleVin || "-"}</td><td className="p-3 font-medium text-white">{part.partName}</td><td className="p-3">{part.partNumber || "-"}</td><td className="p-3">{part.quantity}</td><td className="p-3">{part.targetPrice === null ? "-" : money(part.targetPrice)}</td>{selected.bids.map((bid) => { const item = bid.items.find((entry) => entry.rfqPartId === part.id); return <React.Fragment key={bid.id}><td className="border-l border-[#2A2A2A] p-3">{item?.partType || "Pending"}</td><td className="p-3 text-right">{item ? money(item.unitPrice) : "-"}</td><td className="p-3 text-right font-medium text-white">{item ? money(item.lineTotal) : "-"}</td></React.Fragment> })}</tr>)}</tbody>
+                  <thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th rowSpan={2} className="p-3 text-left">VIN</th><th rowSpan={2} className="p-3 text-left">Part</th><th rowSpan={2} className="p-3 text-left">Number</th><th rowSpan={2} className="p-3 text-left">Qty</th><th rowSpan={2} className="p-3 text-left">Target</th>{selected.bids.map((bid, index) => { const name = bid.supplier.companyName || [bid.supplier.firstName, bid.supplier.lastName].filter(Boolean).join(" ") || bid.supplier.email || "Supplier"; return <th key={bid.id} colSpan={4} className="border-l border-[#2A2A2A] p-3 text-left"><div className="flex min-w-[410px] items-center justify-between gap-3"><div><p className="font-semibold text-white">Vendor {index + 1}</p><p className="text-xs font-normal">{name} · {money(bid.totalAmount)} · up to {bid.deliveryDays} days</p></div>{selected.status === "open" && bid.status === "submitted" ? <Button size="sm" disabled={Boolean(accepting)} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : <span className="text-xs capitalize">{bid.status}</span>}</div></th> })}</tr><tr>{selected.bids.map((bid) => <React.Fragment key={bid.id}><th className="border-l border-t border-[#2A2A2A] p-2 text-left">Condition</th><th className="border-t border-[#2A2A2A] p-2 text-left">Delivery</th><th className="border-t border-[#2A2A2A] p-2 text-right">Unit Price</th><th className="border-t border-[#2A2A2A] p-2 text-right">Line Total</th></React.Fragment>)}</tr></thead>
+                  <tbody>{selected.parts.map((part) => <tr key={part.id} className="border-t border-[#2A2A2A]"><td className="p-3 font-mono text-xs">{part.vehicleVin || selected.vehicleVin || "-"}</td><td className="p-3 font-medium text-white">{part.partName}</td><td className="p-3">{part.partNumber || "-"}</td><td className="p-3">{part.quantity}</td><td className="p-3">{part.targetPrice === null ? "-" : money(part.targetPrice)}</td>{selected.bids.map((bid) => { const item = bid.items.find((entry) => entry.rfqPartId === part.id); return <React.Fragment key={bid.id}><td className="border-l border-[#2A2A2A] p-3">{item?.partType || "Pending"}</td><td className="p-3">{item ? deliveryOptionLabel(item.deliveryOption) : "-"}</td><td className="p-3 text-right">{item ? money(item.unitPrice) : "-"}</td><td className="p-3 text-right font-medium text-white">{item ? money(item.lineTotal) : "-"}</td></React.Fragment> })}</tr>)}</tbody>
                 </table>
               </div>
               {!selected.bids.length ? <p className="border-x border-b border-[#2A2A2A] p-4 text-sm text-[#9CA3AF]">No supplier quotations received yet.</p> : null}
@@ -317,7 +334,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
           <div className="space-y-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4 text-sm">
             <div className="flex justify-between gap-4"><span className="text-[#9CA3AF]">Supplier</span><span className="text-right font-medium">{confirmBid.supplier.companyName || [confirmBid.supplier.firstName, confirmBid.supplier.lastName].filter(Boolean).join(" ") || confirmBid.supplier.email || "Supplier"}</span></div>
             <div className="flex justify-between gap-4"><span className="text-[#9CA3AF]">Total quote</span><strong>{money(confirmBid.totalAmount)}</strong></div>
-            {selected?.parts.map((part) => { const item = confirmBid.items.find((entry) => entry.rfqPartId === part.id); return item ? <div key={part.id} className="border-t border-[#2A2A2A] pt-3"><div className="flex justify-between gap-4"><span>{part.partName} × {part.quantity}</span><strong>{money(item.lineTotal)}</strong></div><p className="mt-1 text-xs text-[#9CA3AF]">{item.partType} · {money(item.unitPrice)} each</p></div> : null })}
+            {selected?.parts.map((part) => { const item = confirmBid.items.find((entry) => entry.rfqPartId === part.id); return item ? <div key={part.id} className="border-t border-[#2A2A2A] pt-3"><div className="flex justify-between gap-4"><span>{part.partName} × {part.quantity}</span><strong>{money(item.lineTotal)}</strong></div><p className="mt-1 text-xs text-[#9CA3AF]">{item.partType} · {deliveryOptionLabel(item.deliveryOption)} · {money(item.unitPrice)} each</p></div> : null })}
             <div className="flex justify-between gap-4"><span className="text-[#9CA3AF]">Delivery</span><span>{confirmBid.deliveryDays} days</span></div>
           </div>
           {renderAddressSelector("fleet-confirm-order-address")}

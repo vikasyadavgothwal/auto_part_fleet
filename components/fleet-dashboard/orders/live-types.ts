@@ -3,6 +3,9 @@ export type LiveOrder = {
   publicId: string
   source: "rfq" | "direct"
   totalAmount: number
+  deliveryProgress: number
+  deliveredItemCount: number
+  totalItemCount: number
   status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled"
   paymentStatus: "pending" | "succeeded" | "failed" | "refunded"
   expectedDeliveryAt: string | null
@@ -22,7 +25,21 @@ export type LiveOrder = {
   deliveryCountry: string | null
   buyer: { id: string; companyName: string | null; firstName: string | null; lastName: string | null; email: string | null; activeRole: string }
   supplier: { id: string; supplierPublicId?: string | null; companyName: string | null; firstName: string | null; lastName: string | null; email: string | null }
-  items: Array<{ id: string; partName: string; partNumber: string | null; quantity: number; unitPrice: number | null; lineTotal: number | null }>
+  items: Array<{
+    id: string
+    partName: string
+    partNumber: string | null
+    quantity: number
+    unitPrice: number | null
+    lineTotal: number | null
+    deliveryOption: string | null
+    expectedDeliveryAt: string | null
+    deliveredAt: string | null
+    proofOfDeliveryUrl: string | null
+    proofOfDeliveryNote: string | null
+    proofRecipientName: string | null
+    proofSubmittedAt: string | null
+  }>
   rfq: {
     publicId: string
     projectName: string

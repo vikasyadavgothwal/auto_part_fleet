@@ -15,7 +15,6 @@ type RfqDetailsStepProps = {
   onDescriptionChange: (value: string) => void
   onDeadlineChange: (value: string) => void
   onVehicleChange: (value: string) => void
-  onAttachmentChange: (file: File | null) => void
 }
 
 export function RfqDetailsStep({
@@ -32,7 +31,6 @@ export function RfqDetailsStep({
   onDescriptionChange,
   onDeadlineChange,
   onVehicleChange,
-  onAttachmentChange,
 }: RfqDetailsStepProps) {
   return (
     <div>
@@ -46,7 +44,7 @@ export function RfqDetailsStep({
       </div>
 
       <div className="space-y-6 rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-8">
-        {vehicleCount <= 1 ? <div>
+        {vehicleCount === 0 ? <div>
           <label className="mb-2 block text-sm font-medium text-white">Fleet Vehicle *</label>
           <select value={selectedVehicleId} onChange={(event) => onVehicleChange(event.target.value)} className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white" required>
             <option value="">Select a vehicle</option>
@@ -64,12 +62,6 @@ export function RfqDetailsStep({
             onChange={(e) => onProjectNameChange(e.target.value)}
             className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white placeholder:text-[#4B5563] transition-all focus:border-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/50"
           />
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium text-white">Attach document (optional)</label>
-          <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(event) => onAttachmentChange(event.target.files?.[0] ?? null)} className="block w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] p-3 text-sm text-[#9CA3AF]" />
-          <p className="mt-2 text-xs text-[#9CA3AF]">PDF, PNG, or JPG up to 10 MB.</p>
         </div>
 
         <div>

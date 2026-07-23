@@ -41,7 +41,6 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
   const paymentTerms = "Net 30"
   const [vehicles, setVehicles] = useState<FleetVehicle[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState(initialVehicleId)
-  const [attachment, setAttachment] = useState<File | null>(null)
   const [submitError, setSubmitError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
@@ -202,7 +201,6 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
       }
       const body = new FormData()
       body.set("payload", JSON.stringify(payload))
-      if (attachment) body.set("attachment", attachment)
       const response = await authenticatedFetch(appPath("/api/rfqs"), { method: "POST", body })
       const result = await response.json() as { ok: boolean; message?: string; rfq?: { publicId?: string } }
       if (!response.ok || !result.ok) throw new Error(result.message ?? "Unable to submit RFQ")
@@ -256,7 +254,6 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
             onDescriptionChange={setDescription}
             onDeadlineChange={setDeadline}
             onVehicleChange={setSelectedVehicleId}
-            onAttachmentChange={setAttachment}
           />
         )}
 

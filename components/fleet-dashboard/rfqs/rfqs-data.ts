@@ -13,6 +13,7 @@ export type FleetRfqBid = {
     unitPrice: number
     lineTotal: number
     partType: string
+    deliveryOption: string
   }>
   supplier: {
     id: string
