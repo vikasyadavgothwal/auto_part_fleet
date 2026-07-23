@@ -42,12 +42,21 @@ const toDashboardSetCookie = (value: string) => {
 }
 
 const backendUrl = (path: string) =>
-  new URL(
-    path,
-    process.env.ADMIN_API_BASE_URL?.trim() ||
+  {
+    const baseUrl =
+      process.env.ADMIN_API_BASE_URL?.trim() ||
       process.env.BACKEND_URL?.trim() ||
-      "http://localhost:3000",
-  )
+      process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL?.trim() ||
+      (process.env.NODE_ENV === "production" ? "" : "http://localhost:3000")
+
+    if (!baseUrl) {
+      throw new Error(
+        "Missing backend API URL. Set ADMIN_API_BASE_URL, BACKEND_URL, or NEXT_PUBLIC_ADMIN_API_BASE_URL.",
+      )
+    }
+
+    return new URL(path, baseUrl)
+  }
 
 export const getSetCookieHeaders = (headers: Headers) => {
   const enhanced = headers as Headers & { getSetCookie?: () => string[] }
