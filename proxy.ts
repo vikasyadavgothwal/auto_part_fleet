@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 
 const accessCookie = "fleet_access_token"
 const refreshCookie = "fleet_refresh_token"
+const dashboardBasePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH)
+
+function normalizeBasePath(value?: string) {
+  const trimmedValue = (value || "").trim().replace(/\/+$/, "")
+  if (!trimmedValue || trimmedValue === "/") return ""
+  return trimmedValue.startsWith("/") ? trimmedValue : `/${trimmedValue}`
+}
 
 const expiresSoon = (token: string) => {
   try {
@@ -21,7 +28,7 @@ export function proxy(request: NextRequest) {
   const access = request.cookies.get(accessCookie)?.value
   if (!refresh || (access && !expiresSoon(access))) return NextResponse.next()
   const destination = request.nextUrl.clone()
-  destination.pathname = "/fleet/api/auth/refresh"
+  destination.pathname = `${dashboardBasePath}/api/auth/refresh`
   destination.search = ""
   destination.searchParams.set("returnTo", `${pathname}${request.nextUrl.search}`)
   return NextResponse.redirect(destination)

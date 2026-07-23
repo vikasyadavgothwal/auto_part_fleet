@@ -1,4 +1,4 @@
-const DEFAULT_BASE_PATH = "/fleet"
+const DEFAULT_BASE_PATH = ""
 
 function normalizeBasePath(value?: string) {
   if (!value) {
@@ -17,8 +17,8 @@ function normalizeBasePath(value?: string) {
 export const appBasePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH)
 
 export const appRoutes = {
-  overview: "/",
-  legacyOverview: "/dashboard",
+  overview: "/dashboard",
+  legacyOverview: "/",
   vehicles: "/vehicles",
   rfqs: "/rfqs",
   createRfq: "/rfqs/create",

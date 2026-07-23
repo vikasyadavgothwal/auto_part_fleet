@@ -9,7 +9,7 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:4001/fleet](http://localhost:4001/fleet) with your browser to see the result.
+Open [http://localhost:4001/dashboard](http://localhost:4001/dashboard) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
