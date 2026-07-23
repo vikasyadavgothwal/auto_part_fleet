@@ -51,6 +51,19 @@ const expiryLabel = (rfq: FleetRfq) => {
   return `${days} day${days === 1 ? "" : "s"}`
 }
 
+const quoteCountLabel = (rfq: FleetRfq) => {
+  if (rfq.quoteWindowActive) return "Ranking in progress"
+  return `${rfq.bids.length} shown`
+}
+
+const quoteWindowMessage = (rfq: FleetRfq) => {
+  if (!rfq.quoteWindowActive) return null
+  const endsAt = rfq.quoteWindowEndsAt
+    ? new Date(rfq.quoteWindowEndsAt).toLocaleString("en-AE")
+    : "the quote window closes"
+  return `Suppliers are quoting. Top five quotes will be shown after ${endsAt}.`
+}
+
 const addressOptionLabel = (address: FleetAddressRecord) =>
   `${address.label}${address.isDefault ? " (Default)" : ""} - ${address.city}, ${address.postalCode}`
 
@@ -259,7 +272,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
             {vehicle || "Not specified"}
           </td>
           <td className="px-6 py-4 text-sm text-[#9CA3AF]">
-            <span className="font-semibold text-[#DC2626]">{rfq.bids.length} received</span>
+            <span className="font-semibold text-[#DC2626]">{quoteCountLabel(rfq)}</span>
           </td>
           <td className="px-6 py-4 text-sm text-[#9CA3AF]">
             <span className="font-semibold text-white">{bestBid ? money(bestBid.totalAmount) : "-"}</span>
@@ -306,14 +319,15 @@ export function RfqsTable({ rfqs, onAccepted }: {
               {selected.order ? <p><span className="text-[#9CA3AF]">Order:</span> <strong className="text-green-500">{selected.order.publicId}</strong></p> : null}
             </div>
             <div>
-              <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-semibold">Requested parts</h3><span className="text-sm text-[#9CA3AF]">Supplier quotations ({selected.bids.length})</span></div>
+              <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-semibold">Requested parts</h3><span className="text-sm text-[#9CA3AF]">Supplier quotations ({quoteCountLabel(selected)})</span></div>
+              {quoteWindowMessage(selected) ? <p className="mb-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-3 text-sm text-[#9CA3AF]">{quoteWindowMessage(selected)}</p> : null}
               <div className="overflow-x-auto rounded-lg border border-[#2A2A2A]">
                 <table className="w-full min-w-[760px] text-sm">
                   <thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th rowSpan={2} className="p-3 text-left">VIN</th><th rowSpan={2} className="p-3 text-left">Part</th><th rowSpan={2} className="p-3 text-left">Number</th><th rowSpan={2} className="p-3 text-left">Qty</th><th rowSpan={2} className="p-3 text-left">Target</th>{selected.bids.map((bid, index) => { const name = bid.supplier.companyName || [bid.supplier.firstName, bid.supplier.lastName].filter(Boolean).join(" ") || bid.supplier.email || "Supplier"; return <th key={bid.id} colSpan={4} className="border-l border-[#2A2A2A] p-3 text-left"><div className="flex min-w-[410px] items-center justify-between gap-3"><div><p className="font-semibold text-white">Vendor {index + 1}</p><p className="text-xs font-normal">{name} · {money(bid.totalAmount)} · up to {bid.deliveryDays} days</p></div>{selected.status === "open" && bid.status === "submitted" ? <Button size="sm" disabled={Boolean(accepting)} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : <span className="text-xs capitalize">{bid.status}</span>}</div></th> })}</tr><tr>{selected.bids.map((bid) => <React.Fragment key={bid.id}><th className="border-l border-t border-[#2A2A2A] p-2 text-left">Condition</th><th className="border-t border-[#2A2A2A] p-2 text-left">Delivery</th><th className="border-t border-[#2A2A2A] p-2 text-right">Unit Price</th><th className="border-t border-[#2A2A2A] p-2 text-right">Line Total</th></React.Fragment>)}</tr></thead>
                   <tbody>{selected.parts.map((part) => <tr key={part.id} className="border-t border-[#2A2A2A]"><td className="p-3 font-mono text-xs">{part.vehicleVin || selected.vehicleVin || "-"}</td><td className="p-3 font-medium text-white">{part.partName}</td><td className="p-3">{part.partNumber || "-"}</td><td className="p-3">{part.quantity}</td><td className="p-3">{part.targetPrice === null ? "-" : money(part.targetPrice)}</td>{selected.bids.map((bid) => { const item = bid.items.find((entry) => entry.rfqPartId === part.id); return <React.Fragment key={bid.id}><td className="border-l border-[#2A2A2A] p-3">{item?.partType || "Pending"}</td><td className="p-3">{item ? deliveryOptionLabel(item.deliveryOption) : "-"}</td><td className="p-3 text-right">{item ? money(item.unitPrice) : "-"}</td><td className="p-3 text-right font-medium text-white">{item ? money(item.lineTotal) : "-"}</td></React.Fragment> })}</tr>)}</tbody>
                 </table>
               </div>
-              {!selected.bids.length ? <p className="border-x border-b border-[#2A2A2A] p-4 text-sm text-[#9CA3AF]">No supplier quotations received yet.</p> : null}
+              {!selected.bids.length ? <p className="border-x border-b border-[#2A2A2A] p-4 text-sm text-[#9CA3AF]">{quoteWindowMessage(selected) ?? "No ranked supplier quotations are available yet."}</p> : null}
             </div>
             {!selected.order && selected.status === "open" ? renderAddressSelector("fleet-rfq-order-address") : null}
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
