@@ -2,7 +2,6 @@
 
 import { Bell, ChevronDown, ExternalLink, LogOut, Search, User } from "lucide-react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,11 +17,15 @@ import { NotificationPopup } from "@/components/notification-popup"
 import { getDashboardUserName, type DashboardUser } from "@/lib/auth/types"
 import { logoutFleet } from "@/lib/auth/client"
 import { mainWebsiteUrl } from "@/lib/main-website-url"
-import { appRoutes } from "@/lib/routes"
 
 export function DashboardHeader({ user }: { user: DashboardUser }) {
-  const router = useRouter()
   const [unreadNotifications, setUnreadNotifications] = useState(0)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    await logoutFleet()
+    window.location.assign(mainWebsiteUrl())
+  }
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-brand-panel backdrop-blur-sm">
       <NotificationLiveListener onUnreadChange={setUnreadNotifications} />
@@ -70,7 +73,7 @@ export function DashboardHeader({ user }: { user: DashboardUser }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button type="button" variant="ghost" className="flex items-center gap-2 rounded-sm bg-brand-panel-strong px-3 py-2"><User className="h-5 w-5 text-brand-muted" /><span className="hidden text-sm font-medium sm:inline">{getDashboardUserName(user)}</span><ChevronDown className="h-4 w-4" /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2">
-              <DropdownMenuItem onSelect={async () => { await logoutFleet(); router.replace(appRoutes.login); router.refresh() }}><LogOut /> Log out</DropdownMenuItem>
+              <DropdownMenuItem disabled={isLoggingOut} onSelect={() => void handleLogout()}><LogOut /> {isLoggingOut ? "Signing out..." : "Log out"}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
