@@ -8,6 +8,7 @@ import { PageHeading } from "@/components/fleet-dashboard/shared/page-heading"
 import { StatusBadge } from "@/components/fleet-dashboard/shared/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useToast } from "@/components/ui/toast-provider"
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,48 @@ const vehicleFields = [
 
 const createVehicleFields = vehicleFields.filter(([name]) => name !== "vin")
 const normalizeVin = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 17)
+const digitsOnly = (value: string) => value.replace(/\D/g, "")
+const currentVehicleYear = new Date().getFullYear() + 1
+
+function cleanText(value: FormDataEntryValue | null) {
+  return String(value ?? "").trim().replace(/\s+/g, " ")
+}
+
+function validateVehicleForm(data: FormData, isEditing: boolean) {
+  const values = {
+    vehicleName: cleanText(data.get("vehicleName")).slice(0, 120),
+    vin: normalizeVin(cleanText(data.get("vin"))),
+    mileage: digitsOnly(cleanText(data.get("mileage"))).slice(0, 7),
+    driver: cleanText(data.get("driver")).slice(0, 120),
+    status: cleanText(data.get("status")),
+    year: digitsOnly(cleanText(data.get("year"))).slice(0, 4),
+    make: cleanText(data.get("make")).slice(0, 80),
+    model: cleanText(data.get("model")).slice(0, 80),
+    trim: cleanText(data.get("trim")).slice(0, 80),
+    isPrimary: data.get("isPrimary") === "on",
+  }
+  const year = Number(values.year)
+  const mileage = Number(values.mileage)
+  if (!values.vin || !/^[A-HJ-NPR-Z0-9]{17}$/.test(values.vin)) {
+    return { error: "VIN must be exactly 17 characters and cannot include I, O, or Q.", values }
+  }
+  if (!values.vehicleName) return { error: "Vehicle name is required.", values }
+  if (!values.year || year < 1886 || year > currentVehicleYear) {
+    return { error: `Vehicle year must be between 1886 and ${currentVehicleYear}.`, values }
+  }
+  if (!values.make) return { error: "Make / Brand is required.", values }
+  if (!values.model) return { error: "Model is required.", values }
+  if (!values.mileage || !Number.isInteger(mileage) || mileage > 2_000_000) {
+    return { error: "Mileage must be a whole number up to 2,000,000.", values }
+  }
+  if (!["active", "maintenance", "inactive"].includes(values.status)) {
+    return { error: "Select a valid vehicle status.", values }
+  }
+  if (!isEditing && values.vin.length !== 17) {
+    return { error: "Complete VIN lookup or enter details manually before saving.", values }
+  }
+  return { error: "", values }
+}
 
 export function VehiclesPageContent({
   initialVehicles,
@@ -61,6 +104,7 @@ export function VehiclesPageContent({
   initialError,
 }: Props) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [vehicles, setVehicles] = useState(initialVehicles)
   const [pagination, setPagination] = useState(initialPagination)
   const [editingVehicle, setEditingVehicle] = useState<FleetVehicle | null>(null)
@@ -91,7 +135,9 @@ export function VehiclesPageContent({
       setVehicles(payload.vehicles)
       setPagination(payload.pagination)
     } catch (error) {
-      setPageError(error instanceof Error ? error.message : "Unable to load vehicles")
+      const message = error instanceof Error ? error.message : "Unable to load vehicles"
+      setPageError(message)
+      showToast({ type: "error", title: "Unable to load vehicles", message })
     } finally {
       setPending(false)
     }
@@ -115,7 +161,9 @@ export function VehiclesPageContent({
 
   async function lookupVin() {
     if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(createVin)) {
-      setVinLookupMessage("VIN must be exactly 17 characters and cannot include I, O, or Q.")
+      const message = "VIN must be exactly 17 characters and cannot include I, O, or Q."
+      setVinLookupMessage(message)
+      showToast({ type: "error", title: "Invalid VIN", message })
       return
     }
     setVinLookupPending(true)
@@ -127,16 +175,22 @@ export function VehiclesPageContent({
       if (payload.found && payload.vehicle) {
         setResolvedVehicle(payload.vehicle)
         setManualVehicleEntry(false)
-        setVinLookupMessage("Vehicle found. Year, make and model were filled automatically.")
+        const message = "Vehicle found. Year, make and model were filled automatically."
+        setVinLookupMessage(message)
+        showToast({ type: "success", title: "Vehicle found", message })
       } else {
         setResolvedVehicle(null)
         setManualVehicleEntry(true)
-        setVinLookupMessage(payload.message ?? "Vehicle details were not found. Check the VIN or enter them manually.")
+        const message = payload.message ?? "Vehicle details were not found. Check the VIN or enter them manually."
+        setVinLookupMessage(message)
+        showToast({ type: "error", title: "Vehicle not found", message })
       }
     } catch (error) {
       setResolvedVehicle(null)
       setManualVehicleEntry(true)
-      setVinLookupMessage(error instanceof Error ? error.message : "Unable to look up VIN")
+      const message = error instanceof Error ? error.message : "Unable to look up VIN"
+      setVinLookupMessage(message)
+      showToast({ type: "error", title: "Unable to look up VIN", message })
     } finally {
       setVinLookupPending(false)
     }
@@ -146,6 +200,12 @@ export function VehiclesPageContent({
     event.preventDefault()
     const form = event.currentTarget
     const data = new FormData(form)
+    const validation = validateVehicleForm(data, Boolean(editingVehicle))
+    if (validation.error) {
+      setDialogError(validation.error)
+      showToast({ type: "error", title: "Check vehicle details", message: validation.error })
+      return
+    }
     setPending(true)
     setDialogError("")
     try {
@@ -159,16 +219,16 @@ export function VehiclesPageContent({
           method: editingVehicle ? "PATCH" : "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            vehicleName: data.get("vehicleName"),
-            vin: data.get("vin"),
-            mileage: data.get("mileage"),
-            driver: data.get("driver"),
-            status: data.get("status"),
-            year: data.get("year"),
-            make: data.get("make"),
-            model: data.get("model"),
-            trim: data.get("trim"),
-            isPrimary: data.get("isPrimary") === "on",
+            vehicleName: validation.values.vehicleName,
+            vin: validation.values.vin,
+            mileage: validation.values.mileage,
+            driver: validation.values.driver,
+            status: validation.values.status,
+            year: validation.values.year,
+            make: validation.values.make,
+            model: validation.values.model,
+            trim: validation.values.trim,
+            isPrimary: validation.values.isPrimary,
           }),
         },
       )
@@ -180,8 +240,15 @@ export function VehiclesPageContent({
       setVehicleDialogOpen(false)
       setEditingVehicle(null)
       await loadPage(editingVehicle ? pagination.page : 1)
+      showToast({
+        type: "success",
+        title: editingVehicle ? "Vehicle updated" : "Vehicle added",
+        message: `${validation.values.vehicleName} saved successfully.`,
+      })
     } catch (error) {
-      setDialogError(error instanceof Error ? error.message : "Unable to save vehicle")
+      const message = error instanceof Error ? error.message : "Unable to save vehicle"
+      setDialogError(message)
+      showToast({ type: "error", title: "Unable to save vehicle", message })
       setPending(false)
     }
   }
@@ -205,8 +272,15 @@ export function VehiclesPageContent({
           ? pagination.page - 1
           : pagination.page,
       )
+      showToast({
+        type: "success",
+        title: "Vehicle deleted",
+        message: `${deleteVehicle.vehicleName} was deleted successfully.`,
+      })
     } catch (error) {
-      setDeleteError(error instanceof Error ? error.message : "Unable to delete vehicle")
+      const message = error instanceof Error ? error.message : "Unable to delete vehicle"
+      setDeleteError(message)
+      showToast({ type: "error", title: "Unable to delete vehicle", message })
       setPending(false)
     }
   }
@@ -344,12 +418,12 @@ export function VehiclesPageContent({
           {dialogError ? (
             <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{dialogError}</p>
           ) : null}
-          <form key={editingVehicle?.id ?? "create"} className="space-y-5" onSubmit={saveVehicle}>
+          <form key={editingVehicle?.id ?? "create"} noValidate className="space-y-5" onSubmit={saveVehicle}>
             {!editingVehicle ? (
               <div className="space-y-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4">
                 <Label htmlFor="create-vin">VIN first</Label>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Input id="create-vin" name="vin" value={createVin} maxLength={17} required placeholder="JT2BF22K6X0123456" className="bg-[#0A0A0A] uppercase" onChange={(event) => { setCreateVin(normalizeVin(event.target.value)); setResolvedVehicle(null); setManualVehicleEntry(false); setVinLookupMessage("") }} />
+                  <Input id="create-vin" name="vin" value={createVin} maxLength={17} placeholder="JT2BF22K6X0123456" className="bg-[#0A0A0A] uppercase" onChange={(event) => { setCreateVin(normalizeVin(event.target.value)); setResolvedVehicle(null); setManualVehicleEntry(false); setVinLookupMessage("") }} />
                   <Button type="button" disabled={vinLookupPending || createVin.length !== 17} onClick={() => void lookupVin()}>{vinLookupPending ? "Searching..." : "Find Vehicle"}</Button>
                 </div>
                 {vinLookupMessage ? <p className="text-sm text-[#9CA3AF]">{vinLookupMessage}</p> : null}
@@ -367,9 +441,9 @@ export function VehiclesPageContent({
                     name={name}
                     type={type}
                     min={type === "number" ? 0 : undefined}
+                    maxLength={type === "text" ? (name === "vehicleName" || name === "driver" ? 120 : 80) : undefined}
                     defaultValue={editingVehicle?.[name] ?? (name === "year" ? resolvedVehicle?.year : name === "make" ? resolvedVehicle?.make : name === "model" ? resolvedVehicle?.model : name === "vehicleName" ? resolvedVehicle?.vehicleName : name === "trim" ? resolvedVehicle?.trim : "")}
                     readOnly={!editingVehicle && Boolean(resolvedVehicle) && ["year", "make", "model", "vehicleName"].includes(name)}
-                    required={!['driver', 'trim'].includes(name)}
                     className="bg-[#0A0A0A]"
                   />
                 </div>
@@ -392,7 +466,7 @@ export function VehiclesPageContent({
             ) : null}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setVehicleDialogOpen(false)} disabled={pending}>Cancel</Button>
-              <Button type="submit" disabled={pending || vinLookupPending || (!editingVehicle && !resolvedVehicle && !manualVehicleEntry)}>{pending ? "Saving..." : editingVehicle ? "Save changes" : "Add vehicle"}</Button>
+              <Button type="submit" disabled={pending || vinLookupPending}>{pending ? "Saving..." : editingVehicle ? "Save changes" : "Add vehicle"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

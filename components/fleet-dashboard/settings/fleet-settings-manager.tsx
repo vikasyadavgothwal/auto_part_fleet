@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/toast-provider"
 import { authenticatedFetch } from "@/lib/auth/client"
 import {
   getFirebaseAuthDiagnostics,
@@ -129,6 +130,7 @@ const logFirebasePhoneError = (error: unknown) => {
 }
 
 export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
+  const { showToast } = useToast()
   const recaptchaVerifier = useRef<RecaptchaVerifier | null>(null)
   const initialForm = {
     ...formFromProfile(profile),
@@ -243,6 +245,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
     const validationError = validateForm()
     if (validationError) {
       setError(validationError)
+      showToast({ type: "error", title: "Check settings", message: validationError })
       return
     }
 
@@ -269,13 +272,14 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
           setMobileLocalNumber(pendingMobileLocalNumber)
         }
       }
-      setMessage(
-        emailChanged || phoneChanged
-          ? "Profile saved. Verify changed email or mobile before it becomes active on your account."
-          : "Settings saved",
-      )
+      const message = emailChanged || phoneChanged
+        ? "Profile saved. Verify changed email or mobile before it becomes active on your account."
+        : "Settings saved"
+      showToast({ type: "success", title: "Settings saved", message })
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Unable to save settings")
+      const message = saveError instanceof Error ? saveError.message : "Unable to save settings"
+      setError(message)
+      showToast({ type: "error", title: "Unable to save settings", message })
     } finally {
       setIsSaving(false)
     }
@@ -286,11 +290,15 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
     setMessage("")
     const email = form.email.trim().toLowerCase()
     if (!email) {
-      setError("Enter an email before verification")
+      const message = "Enter an email before verification"
+      setError(message)
+      showToast({ type: "error", title: "Check email", message })
       return
     }
     if (!EMAIL_PATTERN.test(email)) {
-      setError("Enter a valid email address")
+      const message = "Enter a valid email address"
+      setError(message)
+      showToast({ type: "error", title: "Check email", message })
       return
     }
 
@@ -308,13 +316,16 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
       if (!response.ok || !payload.ok) {
         throw new Error(payload.message || "Unable to send verification link")
       }
-      setMessage(
+      const message =
         payload.verificationLink
           ? `${payload.message} ${payload.verificationLink}`
-          : payload.message || "Verification link sent",
-      )
+          : payload.message || "Verification link sent"
+      setMessage(message)
+      showToast({ type: "success", title: "Verification link sent", message })
     } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : "Unable to send verification link")
+      const message = sendError instanceof Error ? sendError.message : "Unable to send verification link"
+      setError(message)
+      showToast({ type: "error", title: "Unable to send verification link", message })
     } finally {
       setIsSendingEmail(false)
     }
@@ -326,15 +337,20 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
     const validationError = validateForm()
     if (validationError) {
       setError(validationError)
+      showToast({ type: "error", title: "Check settings", message: validationError })
       return
     }
     const normalizedPhone = normalizeMobileValue(form.phone)
     if (!normalizedPhone) {
-      setError("Enter a mobile number before verification")
+      const message = "Enter a mobile number before verification"
+      setError(message)
+      showToast({ type: "error", title: "Check mobile", message })
       return
     }
     if (!isFirebaseAuthConfigured()) {
-      setError("Firebase phone authentication is not configured")
+      const message = "Firebase phone authentication is not configured"
+      setError(message)
+      showToast({ type: "error", title: "Unable to send OTP", message })
       return
     }
 
@@ -368,10 +384,12 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
       }
       setMobileVerificationId(verificationId)
       setOtp("")
-      setMessage("OTP sent by Firebase")
+      showToast({ type: "success", title: "OTP sent", message: "OTP sent by Firebase" })
     } catch (sendError) {
       logFirebasePhoneError(sendError)
-      setError(getFirebasePhoneErrorMessage(sendError))
+      const message = getFirebasePhoneErrorMessage(sendError)
+      setError(message)
+      showToast({ type: "error", title: "Unable to send OTP", message })
     } finally {
       setIsSendingOtp(false)
     }
@@ -411,9 +429,11 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
       syncProfileForm(payload.profile)
       setOtp("")
       setMobileVerificationId("")
-      setMessage("Mobile number verified")
+      showToast({ type: "success", title: "Mobile verified", message: "Mobile number verified" })
     } catch (verifyError) {
-      setError(getFirebasePhoneErrorMessage(verifyError))
+      const message = getFirebasePhoneErrorMessage(verifyError)
+      setError(message)
+      showToast({ type: "error", title: "Unable to verify OTP", message })
     } finally {
       setIsVerifyingOtp(false)
     }
@@ -434,7 +454,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
 
   return (
     <div className="space-y-8">
-    <form className="space-y-8" onSubmit={saveSettings}>
+    <form noValidate className="space-y-8" onSubmit={saveSettings}>
       <div>
         <h1 className="mb-2 text-3xl font-bold text-white">
           Workspace Settings
@@ -480,6 +500,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="fleet-email"
               type="email"
+              maxLength={180}
               value={form.email}
               onChange={(event) => setField("email", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
@@ -525,7 +546,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
                     key={`${country.code}-${country.label}`}
                     value={country.code}
                   >
-                    {country.code} {country.label}
+                    {country.code}
                   </option>
                 ))}
               </select>
@@ -537,6 +558,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
                   setMobileNumber(mobileCountryCode, event.target.value)
                 }
                 inputMode="numeric"
+                maxLength={14}
                 autoComplete="tel-national"
                 placeholder="Mobile number"
                 className="h-11 min-w-0 rounded-l-none border-l-0 border-[#2A2A2A] bg-[#0A0A0A]"
@@ -590,6 +612,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="company-name"
               value={form.companyName}
+              maxLength={160}
               onChange={(event) => setField("companyName", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -600,6 +623,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="first-name"
               value={form.firstName}
+              maxLength={100}
               onChange={(event) => setField("firstName", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -610,6 +634,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="last-name"
               value={form.lastName}
+              maxLength={100}
               onChange={(event) => setField("lastName", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -627,6 +652,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="address-line-1"
               value={form.addressLine1}
+              maxLength={180}
               onChange={(event) => setField("addressLine1", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -637,6 +663,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="address-line-2"
               value={form.addressLine2}
+              maxLength={180}
               onChange={(event) => setField("addressLine2", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -647,6 +674,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="city"
               value={form.city}
+              maxLength={80}
               onChange={(event) => setField("city", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -657,6 +685,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="state"
               value={form.state}
+              maxLength={80}
               onChange={(event) => setField("state", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -667,6 +696,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="postal-code"
               value={form.postalCode}
+              maxLength={20}
               onChange={(event) => setField("postalCode", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -677,6 +707,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="country"
               value={form.country}
+              maxLength={80}
               onChange={(event) => setField("country", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />

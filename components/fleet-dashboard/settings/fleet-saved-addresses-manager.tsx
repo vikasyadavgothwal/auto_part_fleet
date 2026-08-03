@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/toast-provider"
 import { authenticatedFetch } from "@/lib/auth/client"
 import {
   emptyAddressForm,
@@ -64,6 +65,7 @@ const addressSummary = (address: FleetAddressRecord) =>
     .join(", ")
 
 export function FleetSavedAddressesManager() {
+  const { showToast } = useToast()
   const [addresses, setAddresses] = useState<FleetAddressRecord[]>([])
   const [addressForm, setAddressForm] =
     useState<FleetAddressFormValues>(emptyAddressForm)
@@ -101,6 +103,14 @@ export function FleetSavedAddressesManager() {
               ? loadError.message
               : "Unable to load addresses",
           )
+          showToast({
+            type: "error",
+            title: "Unable to load addresses",
+            message:
+              loadError instanceof Error
+                ? loadError.message
+                : "Unable to load addresses",
+          })
         }
       })
       .finally(() => {
@@ -110,7 +120,7 @@ export function FleetSavedAddressesManager() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [showToast])
 
   const setAddressField = <Key extends keyof FleetAddressFormValues>(
     key: Key,
@@ -152,6 +162,7 @@ export function FleetSavedAddressesManager() {
     const validationError = validateAddressForm(addressForm)
     if (validationError) {
       setAddressError(validationError)
+      showToast({ type: "error", title: "Check address", message: validationError })
       return
     }
 
@@ -173,10 +184,11 @@ export function FleetSavedAddressesManager() {
         return [payload.address as FleetAddressRecord, ...existing]
       })
       setAddressForm(emptyAddressForm)
+      showToast({ type: "success", title: "Address saved", message: `${payload.address.label} saved successfully.` })
     } catch (saveError) {
-      setAddressError(
-        saveError instanceof Error ? saveError.message : "Unable to save address",
-      )
+      const message = saveError instanceof Error ? saveError.message : "Unable to save address"
+      setAddressError(message)
+      showToast({ type: "error", title: "Unable to save address", message })
     } finally {
       setIsSavingAddress(false)
     }
@@ -188,6 +200,7 @@ export function FleetSavedAddressesManager() {
     const validationError = validateAddressForm(editAddressForm)
     if (validationError) {
       setEditAddressError(validationError)
+      showToast({ type: "error", title: "Check address", message: validationError })
       return
     }
 
@@ -216,12 +229,13 @@ export function FleetSavedAddressesManager() {
       )
       setEditingAddress(null)
       setEditAddressForm(emptyAddressForm)
+      showToast({ type: "success", title: "Address updated", message: `${payload.address.label} updated successfully.` })
     } catch (updateError) {
-      setEditAddressError(
-        updateError instanceof Error
-          ? updateError.message
-          : "Unable to update address",
-      )
+      const message = updateError instanceof Error
+        ? updateError.message
+        : "Unable to update address"
+      setEditAddressError(message)
+      showToast({ type: "error", title: "Unable to update address", message })
     } finally {
       setIsUpdatingAddress(false)
     }
@@ -256,12 +270,13 @@ export function FleetSavedAddressesManager() {
             : { ...item, isDefault: false },
         ),
       )
+      showToast({ type: "success", title: "Default address updated", message: `${payload.address.label} is now the default address.` })
     } catch (updateError) {
-      setAddressError(
-        updateError instanceof Error
-          ? updateError.message
-          : "Unable to update address",
-      )
+      const message = updateError instanceof Error
+        ? updateError.message
+        : "Unable to update address"
+      setAddressError(message)
+      showToast({ type: "error", title: "Unable to update address", message })
     } finally {
       setDefaultingAddressId("")
     }
@@ -281,12 +296,13 @@ export function FleetSavedAddressesManager() {
       }
       setAddresses((current) => current.filter((item) => item.id !== addressId))
       setAddressPendingDelete(null)
+      showToast({ type: "success", title: "Address deleted", message: "Delivery address deleted successfully." })
     } catch (deleteError) {
-      setAddressError(
-        deleteError instanceof Error
-          ? deleteError.message
-          : "Unable to delete address",
-      )
+      const message = deleteError instanceof Error
+        ? deleteError.message
+        : "Unable to delete address"
+      setAddressError(message)
+      showToast({ type: "error", title: "Unable to delete address", message })
     } finally {
       setDeletingAddressId("")
     }

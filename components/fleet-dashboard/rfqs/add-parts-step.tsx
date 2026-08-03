@@ -214,12 +214,12 @@ export function AddPartsStep({
 
       <div className="mt-12 flex gap-4">
         <button
-          disabled={!canContinue}
+          aria-disabled={!canContinue}
           onClick={onNext}
           className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-medium transition-all ${
             canContinue
               ? "bg-[#DC2626] text-white hover:bg-[#B91C1C]"
-              : "cursor-not-allowed bg-[#2A2A2A] text-[#4B5563]"
+              : "bg-[#2A2A2A] text-[#4B5563]"
           }`}
         >
           Continue

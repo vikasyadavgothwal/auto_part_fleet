@@ -46,7 +46,7 @@ export function RfqDetailsStep({
       <div className="space-y-6 rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-8">
         {vehicleCount === 0 ? <div>
           <label className="mb-2 block text-sm font-medium text-white">Fleet Vehicle *</label>
-          <select value={selectedVehicleId} onChange={(event) => onVehicleChange(event.target.value)} className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white" required>
+          <select value={selectedVehicleId} onChange={(event) => onVehicleChange(event.target.value)} className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white">
             <option value="">Select a vehicle</option>
             {vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.vehicleName} · {vehicle.vin}</option>)}
           </select>
@@ -59,6 +59,7 @@ export function RfqDetailsStep({
             type="text"
             placeholder="e.g., Q2 Fleet Maintenance"
             value={projectName}
+            maxLength={120}
             onChange={(e) => onProjectNameChange(e.target.value)}
             className="h-12 w-full rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 text-white placeholder:text-[#4B5563] transition-all focus:border-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/50"
           />
@@ -72,6 +73,7 @@ export function RfqDetailsStep({
             placeholder="Provide additional context about this RFQ..."
             rows={4}
             value={description}
+            maxLength={1000}
             onChange={(e) => onDescriptionChange(e.target.value)}
             className="w-full resize-none rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] px-4 py-3 text-white placeholder:text-[#4B5563] transition-all focus:border-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/50"
           />
@@ -104,12 +106,12 @@ export function RfqDetailsStep({
         </button>
 
         <button
-          disabled={!canContinue}
+          aria-disabled={!canContinue}
           onClick={onNext}
           className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-medium transition-all ${
             canContinue
               ? "bg-[#DC2626] text-white hover:bg-[#B91C1C]"
-              : "cursor-not-allowed bg-[#2A2A2A] text-[#4B5563]"
+              : "bg-[#2A2A2A] text-[#4B5563]"
           }`}
         >
           Continue

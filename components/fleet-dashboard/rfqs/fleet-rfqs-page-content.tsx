@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { CheckCircle2, Plus, Search } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/toast-provider"
 import { authenticatedFetch } from "@/lib/auth/client"
 import { appPath, appRoutes } from "@/lib/routes"
 import { PageHeading } from "../shared/page-heading"
@@ -19,11 +20,21 @@ export function FleetRfqsPageContent({ initialRfqs, initialPagination, createdRf
   initialPagination: RfqPagination
   createdRfqId: string | null
 }) {
+  const { showToast } = useToast()
   const [rfqs, setRfqs] = React.useState(initialRfqs)
   const [pagination, setPagination] = React.useState(initialPagination)
   const [search, setSearch] = React.useState("")
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState("")
+
+  React.useEffect(() => {
+    if (!createdRfqId) return
+    showToast({
+      type: "success",
+      title: "RFQ created",
+      message: `${createdRfqId === "1" ? "RFQ" : createdRfqId} created successfully. It is now available for supplier quotes.`,
+    })
+  }, [createdRfqId, showToast])
 
   const load = async (page: number, query = search) => {
     setLoading(true)
@@ -36,7 +47,9 @@ export function FleetRfqsPageContent({ initialRfqs, initialPagination, createdRf
       setRfqs(payload.rfqs)
       setPagination(payload.pagination)
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to load RFQs")
+      const message = caught instanceof Error ? caught.message : "Unable to load RFQs"
+      setError(message)
+      showToast({ type: "error", title: "Unable to load RFQs", message })
     } finally {
       setLoading(false)
     }
@@ -44,7 +57,6 @@ export function FleetRfqsPageContent({ initialRfqs, initialPagination, createdRf
 
   return <div className="space-y-8">
     <PageHeading title="Fleet RFQs" description="Manage bulk procurement requests for your fleet." action={<Link href={appRoutes.createRfq}><Button className="gap-2 bg-[#DC2626] text-white hover:bg-[#B91C1C]"><Plus className="h-5 w-5" />Create Bulk RFQ</Button></Link>} />
-    {createdRfqId ? <div role="status" className="flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-400"><CheckCircle2 className="h-5 w-5" /><span><strong>{createdRfqId === "1" ? "RFQ" : createdRfqId}</strong> created successfully. It is now available for supplier quotes.</span></div> : null}
     <RfqStatCards rfqs={rfqs} />
     <form className="flex max-w-2xl gap-2" onSubmit={(event) => { event.preventDefault(); void load(1) }}>
       <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search RFQ ID, project, vehicle, VIN, or part..." className="border-[#2A2A2A] bg-[#1A1A1A] pl-9 text-white" /></div>

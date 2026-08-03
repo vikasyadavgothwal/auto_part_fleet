@@ -12,11 +12,57 @@ import type { FleetVehicle, VehiclesResponse } from "@/components/fleet-dashboar
 import type { DashboardUser } from "@/lib/auth/types"
 import { authenticatedFetch } from "@/lib/auth/client"
 import { appPath, appRoutes } from "@/lib/routes"
+import { useToast } from "@/components/ui/toast-provider"
 
 const maxParts = 20
+const cleanText = (value: string) => value.trim().replace(/\s+/g, " ")
+const decimalOnly = (value: string) => {
+  const normalized = value.replace(/[^\d.]/g, "")
+  const [whole, ...decimalParts] = normalized.split(".")
+  return decimalParts.length ? `${whole}.${decimalParts.join("").slice(0, 2)}` : whole
+}
+
+function validateParts(parts: PartItem[], selectedVehicleId: string) {
+  if (!parts.length) return "Add at least one part."
+  if (parts.length > maxParts) return `An RFQ can include up to ${maxParts} parts.`
+  for (const part of parts) {
+    if (!cleanText(part.partName)) return "Part name is required for every row."
+    if (cleanText(part.partName).length > 120) return "Part name must be 120 characters or fewer."
+    if (cleanText(part.partNumber).length > 80) return "Part number must be 80 characters or fewer."
+    const quantity = Number(part.quantity)
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) {
+      return "Quantity must be between 1 and 999."
+    }
+    if (part.targetPrice) {
+      const targetPrice = Number(part.targetPrice)
+      if (!/^\d+(\.\d{1,2})?$/.test(part.targetPrice) || targetPrice < 0 || targetPrice > 999999.99) {
+        return "Target price must be a valid amount up to AED 999,999.99."
+      }
+    }
+    if (cleanText(part.notes).length > 500) return "Notes must be 500 characters or fewer."
+    if (!selectedVehicleId && !/^[A-HJ-NPR-Z0-9]{17}$/.test(part.vin ?? "")) {
+      return "Select a fleet vehicle or enter a valid 17-character VIN for every part."
+    }
+  }
+  return ""
+}
+
+function validateDetails(projectName: string, deadline: string, selectedVehicleId: string, importedVehicleCount: number) {
+  if (!cleanText(projectName)) return "Project name is required."
+  if (cleanText(projectName).length > 120) return "Project name must be 120 characters or fewer."
+  const deadlineDate = new Date(`${deadline}T23:59:59`)
+  if (!deadline || Number.isNaN(deadlineDate.getTime()) || deadlineDate <= new Date()) {
+    return "Response deadline must be in the future."
+  }
+  if (!selectedVehicleId && importedVehicleCount === 0) {
+    return "Select a fleet vehicle or import/enter a valid VIN."
+  }
+  return ""
+}
 
 export function CreateRfqPage({ user, initialVehicleId = "" }: { user: DashboardUser; initialVehicleId?: string }) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [step, setStep] = useState<Step>(1)
 
   const [parts, setParts] = useState<PartItem[]>([
@@ -60,8 +106,12 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
             : ""
         ))
       })
-      .catch((error) => setSubmitError(error instanceof Error ? error.message : "Unable to load vehicles"))
-  }, [])
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "Unable to load vehicles"
+        setSubmitError(message)
+        showToast({ type: "error", title: "Unable to load vehicles", message })
+      })
+  }, [showToast])
 
   const totalQuantity = useMemo(
     () => parts.reduce((sum, part) => sum + (Number(part.quantity) || 0), 0),
@@ -118,8 +168,11 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
       setSelectedVehicleId(matchedVehicle?.id ?? "")
       setImportedVehicles(result.vehicles ?? [])
       setParts(result.parts.map((part, index) => ({ ...part, id: Date.now() + index, notes: "" })))
+      showToast({ type: "success", title: "RFQ file imported", message: `${result.parts.length} part rows imported successfully.` })
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Unable to import RFQ file")
+      const message = error instanceof Error ? error.message : "Unable to import RFQ file"
+      setSubmitError(message)
+      showToast({ type: "error", title: "Unable to import RFQ file", message })
     } finally {
       setIsImporting(false)
     }
@@ -142,12 +195,34 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
   }
 
   async function handleNext() {
-    if (step === 1 && canContinueStep1) {
+    if (step === 1) {
+      const validationError = validateParts(parts, selectedVehicleId)
+      if (validationError) {
+        setSubmitError(validationError)
+        showToast({ type: "error", title: "Check RFQ parts", message: validationError })
+        return
+      }
       setIsImporting(true); setSubmitError("")
-      try { await resolveManualVins(); setStep(2) } catch (error) { setSubmitError(error instanceof Error ? error.message : "Unable to validate VIN") }
+      try {
+        await resolveManualVins()
+        setStep(2)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unable to validate VIN"
+        setSubmitError(message)
+        showToast({ type: "error", title: "Unable to validate VIN", message })
+      }
       finally { setIsImporting(false) }
     }
-    if (step === 2 && canContinueStep2) setStep(3)
+    if (step === 2) {
+      const validationError = validateDetails(projectName, deadline, selectedVehicleId, importedVehicleCount)
+      if (validationError) {
+        setSubmitError(validationError)
+        showToast({ type: "error", title: "Check RFQ details", message: validationError })
+        return
+      }
+      setSubmitError("")
+      setStep(3)
+    }
   }
 
   function handleBack() {
@@ -159,6 +234,12 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
     setIsSubmitting(true)
     setSubmitError("")
     try {
+      const partValidationError = validateParts(parts, selectedVehicleId)
+      const detailValidationError = validateDetails(projectName, deadline, selectedVehicleId, importedVehicleCount)
+      if (partValidationError || detailValidationError) {
+        const message = partValidationError || detailValidationError
+        throw new Error(message)
+      }
       const resolvedVehicles = await resolveManualVins()
       const importedVins = Array.from(new Set(parts.map((part) => part.vin?.trim().toUpperCase()).filter((vin): vin is string => Boolean(vin))))
       const selectedVin = vehicles.find((vehicle) => vehicle.id === selectedVehicleId)?.vin ?? ""
@@ -175,8 +256,8 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
       const payload = {
         source: "fleet",
         fleetVehicleId: batchVins.length === 1 ? primarySavedVehicle?.id : undefined,
-        projectName,
-        description,
+        projectName: cleanText(projectName),
+        description: cleanText(description),
         responseDeadline: new Date(`${deadline}T23:59:59`).toISOString(),
         deliveryRequirement,
         paymentTerms,
@@ -192,11 +273,11 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
         } : undefined,
         parts: parts.map((part) => ({
           vehicleVin: part.vin?.trim().toUpperCase() || selectedVin,
-          partName: part.partName,
-          partNumber: part.partNumber,
+          partName: cleanText(part.partName),
+          partNumber: cleanText(part.partNumber),
           quantity: part.quantity,
-          targetPrice: part.targetPrice,
-          notes: part.notes,
+          targetPrice: decimalOnly(part.targetPrice),
+          notes: cleanText(part.notes),
         })),
       }
       const body = new FormData()
@@ -205,10 +286,13 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
       const result = await response.json() as { ok: boolean; message?: string; rfq?: { publicId?: string } }
       if (!response.ok || !result.ok) throw new Error(result.message ?? "Unable to submit RFQ")
       const created = result.rfq?.publicId ? `?created=${encodeURIComponent(result.rfq.publicId)}` : "?created=1"
+      showToast({ type: "success", title: "RFQ created", message: result.rfq?.publicId ? `${result.rfq.publicId} created successfully.` : "RFQ created successfully." })
       router.push(`${appRoutes.rfqs}${created}`)
       router.refresh()
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Unable to submit RFQ")
+      const message = error instanceof Error ? error.message : "Unable to submit RFQ"
+      setSubmitError(message)
+      showToast({ type: "error", title: "Unable to submit RFQ", message })
     } finally {
       setIsSubmitting(false)
     }
