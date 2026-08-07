@@ -49,7 +49,16 @@ Fleet/vehicle management dashboard for vehicles, RFQs, orders, suppliers, report
 - Vehicle, RFQ creation, RFQ list, order, supplier, report, and settings pages render
 - Auth routes exchange backend cookies correctly
 - RFQ/order API changes are checked against supplier and admin apps
-- Run the commands documented in this app README when relevant.
+- Preferred validation: `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` when relevant.
 - Update project root `docs/AI_HANDOFF.md` after major changes.
+
+### App-Specific Boundaries
+
+- Fleet vehicle limits, staff limits, role access, and plan feature access must be enforced by `auto_parts_admin`.
+- UI menu/tab visibility may use backend-provided permissions, but backend APIs must still enforce every fleet action.
+
+### Visual Design Rule
+
+- For any new UI feature (buttons, inputs, selects, modals, tables, cards, and similar controls), use the existing ShadCN UI components and keep spacing, type scale, colors, and interaction patterns aligned with the current app design language.
 
 <!-- END:autoparts-pro-codex-docs -->

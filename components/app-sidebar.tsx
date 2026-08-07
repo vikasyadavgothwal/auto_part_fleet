@@ -9,6 +9,13 @@ import {
   ShoppingCart,
   Building2,
   ChartColumn,
+  Headphones,
+  Plug,
+  Search,
+  Shield,
+  Users,
+  ShieldCheck,
+  BadgeCheck,
   Settings,
 } from "lucide-react"
 import {
@@ -23,16 +30,32 @@ import {
 import { appRoutes, stripBasePath } from "@/lib/routes"
 
 const items = [
-  { title: "Overview", url: appRoutes.overview, icon: House },
-  { title: "Vehicles", url: appRoutes.vehicles, icon: Truck },
-  { title: "RFQs", url: appRoutes.rfqs, icon: FileText },
-  { title: "Orders", url: appRoutes.orders, icon: ShoppingCart },
-  { title: "Suppliers", url: appRoutes.suppliers, icon: Building2 },
-  { title: "Reports", url: appRoutes.reports, icon: ChartColumn },
+  { title: "Overview", url: appRoutes.overview, icon: House, menuKey: "overview" },
+  { title: "Vehicles", url: appRoutes.vehicles, icon: Truck, menuKey: "vehicles" },
+  { title: "RFQs", url: appRoutes.rfqs, icon: FileText, menuKey: "rfqs" },
+  { title: "Orders", url: appRoutes.orders, icon: ShoppingCart, menuKey: "orders" },
+  { title: "Suppliers", url: appRoutes.suppliers, icon: Building2, menuKey: "suppliers" },
+  { title: "Saved Searches", url: appRoutes.savedSearches, icon: Search, menuKey: "saved-searches" },
+  { title: "Integrations", url: appRoutes.integrations, icon: Plug, menuKey: "integrations" },
+  { title: "Security", url: appRoutes.security, icon: Shield, menuKey: "security" },
+  { title: "Support", url: appRoutes.support, icon: Headphones, menuKey: "support" },
+  { title: "Staff", url: appRoutes.staff, icon: Users, menuKey: "staff" },
+  { title: "Roles", url: appRoutes.roles, icon: ShieldCheck, menuKey: "roles" },
+  { title: "Reports", url: appRoutes.reports, icon: ChartColumn, menuKey: "reports" },
+  { title: "Plans", url: appRoutes.plans, icon: BadgeCheck, menuKey: "plans" },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({
+  visibleMenus = [],
+  planName,
+  isOwner = false,
+}: {
+  visibleMenus?: string[]
+  planName?: string | null
+  isOwner?: boolean
+}) {
   const currentPath = stripBasePath(usePathname())
+  const visibleMenuSet = new Set(["settings", ...(isOwner ? ["overview", "plans"] : []), ...visibleMenus])
 
   return (
     <Sidebar className="border-sidebar-border bg-[#1A1A1A] text-white">
@@ -43,11 +66,29 @@ export function AppSidebar() {
             Fleet Manager
           </p>
         </Link>
+        {planName && visibleMenuSet.has("plans") ? (
+          <Link
+            href={appRoutes.plans}
+            className="group mt-4 block rounded-lg border border-primary/25 bg-[#0A0A0A] p-3 shadow-[0_14px_34px_rgba(0,0,0,0.22)] transition hover:border-primary/50 hover:bg-[#111111]"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <span className="flex h-7 w-7 items-center justify-center rounded-md border border-primary/25 bg-primary/10 text-primary">
+                  <BadgeCheck className="h-4 w-4" />
+                </span>
+                Current plan
+              </span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.12)]" />
+            </div>
+            <p className="mt-3 truncate text-sm font-semibold text-white">{planName}</p>
+            <p className="mt-1 text-xs text-muted-foreground group-hover:text-white/80">Manage or upgrade</p>
+          </Link>
+        ) : null}
       </SidebarHeader>
 
       <SidebarContent className="flex-1 overflow-y-auto px-4 py-4">
         <SidebarMenu className="space-y-1">
-          {items.map((item) => {
+          {items.filter((item) => visibleMenuSet.has(item.menuKey)).map((item) => {
             const Icon = item.icon
 
             const isActive =
@@ -79,7 +120,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-[#2A2A2A] p-4">
+      {visibleMenuSet.has("settings") ? <SidebarFooter className="border-t border-[#2A2A2A] p-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -105,7 +146,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarFooter>
+      </SidebarFooter> : null}
     </Sidebar>
   )
 }
