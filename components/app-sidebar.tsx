@@ -13,7 +13,6 @@ import {
   Plug,
   KeyRound,
   CirclePlus,
-  Search,
   Users,
   ShieldCheck,
   BadgeCheck,
@@ -36,7 +35,6 @@ const items = [
   { title: "RFQs", url: appRoutes.rfqs, icon: FileText, menuKey: "rfqs" },
   { title: "Orders", url: appRoutes.orders, icon: ShoppingCart, menuKey: "orders" },
   { title: "Suppliers", url: appRoutes.suppliers, icon: Building2, menuKey: "suppliers" },
-  { title: "Saved Searches", url: appRoutes.savedSearches, icon: Search, menuKey: "saved-searches" },
   { title: "Integrations", url: appRoutes.integrations, icon: Plug, menuKey: "integrations" },
   { title: "API Keys", url: appRoutes.apiKeys, icon: KeyRound, menuKey: "api-keys" },
   { title: "Paid Add-ons", url: appRoutes.addOns, icon: CirclePlus, menuKey: "add-ons" },
@@ -47,6 +45,7 @@ const items = [
   { title: "Plans", url: appRoutes.plans, icon: BadgeCheck, menuKey: "plans" },
 ]
 const fallbackMenuKeys = items.map((item) => item.menuKey)
+const fallbackMenuKeysWithoutApiAccess = fallbackMenuKeys.filter((menuKey) => menuKey !== "api-keys")
 
 export function AppSidebar({
   visibleMenus = [],
@@ -58,8 +57,8 @@ export function AppSidebar({
   isOwner?: boolean
 }) {
   const currentPath = stripBasePath(usePathname())
-  const effectiveVisibleMenus = visibleMenus.length ? visibleMenus : isOwner || !planName ? fallbackMenuKeys : []
-  const visibleMenuSet = new Set(["settings", ...(isOwner ? ["overview", "plans", "add-ons", "api-keys"] : []), ...effectiveVisibleMenus])
+  const effectiveVisibleMenus = visibleMenus.length ? visibleMenus : isOwner || !planName ? fallbackMenuKeysWithoutApiAccess : []
+  const visibleMenuSet = new Set(["settings", ...(isOwner ? ["overview", "plans", "add-ons"] : []), ...effectiveVisibleMenus])
 
   return (
     <Sidebar className="border-sidebar-border bg-[#1A1A1A] text-white">
