@@ -43,6 +43,6 @@ export async function GET(request: NextRequest) {
     ? requestedReturn
     : appPath(appRoutes.overview)
   const response = NextResponse.redirect(new URL(result.ok ? safeReturn : appPath(appRoutes.login), request.url))
-  getSetCookieHeaders(result.response.headers).forEach((value) => response.headers.append("set-cookie", value))
+  getSetCookieHeaders(result.response.headers).forEach((value: string) => response.headers.append("set-cookie", value))
   return response
 }
