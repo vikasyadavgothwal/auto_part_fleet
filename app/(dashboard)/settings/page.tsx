@@ -3,7 +3,6 @@ import { cookies } from "next/headers"
 import { ChangePasswordCard } from "@/components/fleet-dashboard/settings/change-password-card"
 import { FleetSettingsManager } from "@/components/fleet-dashboard/settings/fleet-settings-manager"
 import { AccountSettingsCard } from "@/components/shared/account-settings-card"
-import { LoginSecurityCard } from "@/components/shared/login-security-card"
 import { requestBackend } from "@/lib/auth/backend"
 import { getFleetSettings } from "@/lib/fleet-settings.server"
 
@@ -40,7 +39,6 @@ export default async function SettingsPage() {
     <div className="space-y-8">
       {profile ? <FleetSettingsManager profile={profile} /> : null}
       <AccountSettingsCard initialAccount={context.account} />
-      <LoginSecurityCard />
       <ChangePasswordCard />
     </div>
   )

@@ -4,11 +4,17 @@ import { applySetCookieHeaders, getSetCookieHeaders, mergeCookieHeader, requestB
 import type { AuthApiPayload } from "@/lib/auth/types"
 import { appPath, appRoutes } from "@/lib/routes"
 
+const AUTH_REFRESH_TIMEOUT_MS = 4_000
+
 async function refresh(request: NextRequest) {
   const current = request.headers.get("cookie")
+  if (!current) {
+    return { response: NextResponse.json({ ok: false, message: "Session expired" }, { status: 401 }), ok: false }
+  }
   const backend = await requestBackend("/api/v1/user/auth/refresh", {
     method: "POST",
     cookieHeader: current,
+    timeoutMs: AUTH_REFRESH_TIMEOUT_MS,
   })
   const values = getSetCookieHeaders(backend.headers)
   if (!backend.ok) {
@@ -18,6 +24,7 @@ async function refresh(request: NextRequest) {
   }
   const me = await requestBackend("/api/v1/user/auth/me", {
     cookieHeader: mergeCookieHeader(current, values),
+    timeoutMs: AUTH_REFRESH_TIMEOUT_MS,
   })
   const payload = (await me.json()) as AuthApiPayload
   if (!me.ok || !payload.ok || !payload.user.roles.includes("Fleet")) {
