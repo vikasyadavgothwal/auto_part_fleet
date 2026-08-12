@@ -1,12 +1,20 @@
+import { Award, Banknote, Package, Star } from "lucide-react"
+
 import { Card, CardContent } from "@/components/ui/card"
+import type { SupplierStat } from "@/lib/fleet-analytics"
 
-import { stats } from "./suppliers-data"
+const icons = {
+  award: Award,
+  banknote: Banknote,
+  package: Package,
+  star: Star,
+}
 
-export function SupplierStatCards() {
+export function SupplierStatCards({ stats }: { stats: SupplierStat[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
       {stats.map((stat) => {
-        const Icon = stat.icon
+        const Icon = icons[stat.iconKey]
 
         return (
           <Card

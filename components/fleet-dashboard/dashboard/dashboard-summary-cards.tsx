@@ -1,10 +1,24 @@
+import type { ComponentType } from "react"
+import { BarChart3, TrendingDown, Truck } from "lucide-react"
+
 import { Card, CardContent } from "@/components/ui/card"
-import { summaryCards } from "./dashboard-data"
-export function DashboardSummaryCards() {
+import type { DashboardSummary } from "@/lib/fleet-analytics"
+
+const icons = {
+  trendingDown: TrendingDown,
+  barChart: BarChart3,
+  truck: Truck,
+} satisfies Record<DashboardSummary["iconKey"], ComponentType<{ className?: string }>>
+
+export function DashboardSummaryCards({
+  summaries,
+}: {
+  summaries: DashboardSummary[]
+}) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      {summaryCards.map((item) => {
-        const Icon = item.icon
+      {summaries.map((item) => {
+        const Icon = icons[item.iconKey]
         return (
           <Card
             key={item.title}

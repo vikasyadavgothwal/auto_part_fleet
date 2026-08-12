@@ -1,67 +1,45 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { cookies } from "next/headers"
 
-export default function SettingsPage() {
+import { ChangePasswordCard } from "@/components/fleet-dashboard/settings/change-password-card"
+import { FleetSettingsManager } from "@/components/fleet-dashboard/settings/fleet-settings-manager"
+import { AccountSettingsCard } from "@/components/shared/account-settings-card"
+import { requestBackend } from "@/lib/auth/backend"
+import { getFleetSettings } from "@/lib/fleet-settings.server"
+
+export const dynamic = "force-dynamic"
+
+type BusinessAccessPayload = {
+  ok: boolean
+  access?: Array<{ businessAccount: { type: string; isOwner?: boolean } }>
+}
+
+type AccountPayload = {
+  ok: boolean
+  account?: { firstName: string | null; lastName: string | null; email: string | null }
+}
+
+async function getSettingsContext() {
+  const cookieHeader = (await cookies()).toString()
+  const [accessResponse, accountResponse] = await Promise.all([
+    requestBackend("/api/v1/business/access", { cookieHeader }).catch(() => null),
+    requestBackend("/api/v1/user/account", { cookieHeader }).catch(() => null),
+  ])
+  const accessPayload = accessResponse?.ok ? ((await accessResponse.json()) as BusinessAccessPayload) : null
+  const accountPayload = accountResponse?.ok ? ((await accountResponse.json()) as AccountPayload) : null
+  return {
+    isOwner: Boolean(accessPayload?.access?.find((item) => item.businessAccount.type === "Fleet")?.businessAccount.isOwner),
+    account: accountPayload?.account ?? null,
+  }
+}
+
+export default async function SettingsPage() {
+  const context = await getSettingsContext()
+  const profile = context.isOwner ? await getFleetSettings() : null
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="mb-2 text-3xl font-bold text-white">Workspace Settings</h1>
-        <p className="text-[#9CA3AF]">
-          Manage the fleet workspace details used across the dashboard.
-        </p>
-      </div>
-
-      <Card className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] shadow-none">
-        <CardHeader>
-          <CardTitle className="text-white">Organization Profile</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="company-name">Company Name</Label>
-            <Input
-              id="company-name"
-              defaultValue="ABC Fleet"
-              className="border-[#2A2A2A] bg-[#0A0A0A]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="ops-email">Operations Email</Label>
-            <Input
-              id="ops-email"
-              type="email"
-              defaultValue="ops@autopartspro.com"
-              className="border-[#2A2A2A] bg-[#0A0A0A]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="currency">Preferred Currency</Label>
-            <Input
-              id="currency"
-              defaultValue="AED"
-              className="border-[#2A2A2A] bg-[#0A0A0A]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="timezone">Timezone</Label>
-            <Input
-              id="timezone"
-              defaultValue="America/Chicago"
-              className="border-[#2A2A2A] bg-[#0A0A0A]"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <Button className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">
-              Save Settings
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {profile ? <FleetSettingsManager profile={profile} /> : null}
+      <AccountSettingsCard initialAccount={context.account} />
+      <ChangePasswordCard />
     </div>
   )
 }

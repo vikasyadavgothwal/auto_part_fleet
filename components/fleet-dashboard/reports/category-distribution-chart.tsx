@@ -9,10 +9,9 @@ import {
 } from "recharts"
 
 import { Card, CardContent } from "@/components/ui/card"
+import type { CategoryDistributionPoint } from "@/lib/fleet-analytics"
 
-import { categoryDistribution } from "./reports-data"
-
-export function CategoryDistributionChart() {
+export function CategoryDistributionChart({ data }: { data: CategoryDistributionPoint[] }) {
   return (
     <Card className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] shadow-none">
       <CardContent className="p-6">
@@ -24,7 +23,7 @@ export function CategoryDistributionChart() {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={categoryDistribution}
+                data={data}
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
@@ -34,7 +33,7 @@ export function CategoryDistributionChart() {
                   `${((percent ?? 0) * 100).toFixed(0)}%`
                 }
               >
-                {categoryDistribution.map((entry) => (
+                {data.map((entry) => (
                   <Cell key={entry.name} fill={entry.color} />
                 ))}
               </Pie>
@@ -51,7 +50,7 @@ export function CategoryDistributionChart() {
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {categoryDistribution.map((item) => (
+          {data.map((item) => (
             <div key={item.name} className="flex items-center gap-2">
               <div
                 className="h-3 w-3 rounded"

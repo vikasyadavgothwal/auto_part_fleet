@@ -111,18 +111,10 @@ export const suppliers = [
 
 export const guidance = [
   {
-    title: "Select Carefully",
+    title: "Preferred Supplier Status",
     items: [
-      "Compare delivery speed and reliability",
-      "Review pricing across multiple categories",
-      "Check supplier specialization before onboarding",
-    ],
-  },
-  {
-    title: "Set Preferred Suppliers",
-    items: [
-      "Mark top-performing partners as preferred",
-      "Use preferred vendors for recurring orders",
+      "Minimum 4.5 star rating from fleet managers",
+      "95%+ on-time delivery rate",
       "Minimum 50 completed orders",
     ],
   },

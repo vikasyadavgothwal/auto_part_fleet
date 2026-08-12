@@ -5,8 +5,14 @@ import { FleetOverviewSection } from "@/components/fleet-dashboard/dashboard/fle
 import { RecentOrdersSection } from "@/components/fleet-dashboard/dashboard/recent-orders-section"
 import { TopSuppliersCard } from "@/components/fleet-dashboard/dashboard/top-suppliers-card"
 import { PageHeading } from "@/components/fleet-dashboard/shared/page-heading"
+import { buildFleetOverviewData } from "@/lib/fleet-analytics"
+import { getFleetAnalyticsInput } from "@/lib/fleet-dashboard-data.server"
 
-export default function FleetDashboardPage() {
+export const dynamic = "force-dynamic"
+
+export default async function FleetDashboardPage() {
+  const overview = buildFleetOverviewData(await getFleetAnalyticsInput())
+
   return (
     <div className="space-y-8">
       <PageHeading
@@ -14,12 +20,12 @@ export default function FleetDashboardPage() {
         description="Manage procurement and vehicle maintenance across your fleet."
       />
 
-      <DashboardKpiCards />
-      <DashboardSummaryCards />
-      <ActiveRfqsSection />
-      <RecentOrdersSection />
-      <FleetOverviewSection />
-      <TopSuppliersCard />
+      <DashboardKpiCards kpis={overview.kpis} />
+      <DashboardSummaryCards summaries={overview.summaries} />
+      <ActiveRfqsSection rfqs={overview.rfqs} />
+      <RecentOrdersSection orders={overview.orders} />
+      <FleetOverviewSection vehicles={overview.vehicles} />
+      <TopSuppliersCard suppliers={overview.suppliers} />
     </div>
   )
 }

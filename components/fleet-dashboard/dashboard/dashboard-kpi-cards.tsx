@@ -1,12 +1,21 @@
+import type { ComponentType } from "react"
+import { Banknote, FileText, ShoppingCart, Truck } from "lucide-react"
+
 import { Card, CardContent } from "@/components/ui/card"
+import type { DashboardKpi } from "@/lib/fleet-analytics"
 
-import { kpis } from "./dashboard-data"
+const icons = {
+  banknote: Banknote,
+  fileText: FileText,
+  shoppingCart: ShoppingCart,
+  truck: Truck,
+} satisfies Record<DashboardKpi["iconKey"], ComponentType<{ className?: string }>>
 
-export function DashboardKpiCards() {
+export function DashboardKpiCards({ kpis }: { kpis: DashboardKpi[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
       {kpis.map((item) => {
-        const Icon = item.icon
+        const Icon = icons[item.iconKey]
 
         return (
           <Card
@@ -18,7 +27,7 @@ export function DashboardKpiCards() {
                 <div className="text-sm font-medium text-[#9CA3AF]">
                   {item.title}
                 </div>
-                <div className="rounded-lg border border-[#DC2626]/20 bg-[#DC2626]/10 p-2">
+                <div className="rounded-sm border border-[#DC2626]/20 bg-[#DC2626]/10 p-2">
                   <Icon className="h-5 w-5 text-[#DC2626]" />
                 </div>
               </div>

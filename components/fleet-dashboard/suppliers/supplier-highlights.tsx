@@ -1,13 +1,21 @@
+import { Banknote, Clock, TrendingUp } from "lucide-react"
+
 import { Card, CardContent } from "@/components/ui/card"
+import type { SupplierHighlight } from "@/lib/fleet-analytics"
 
 import { SupplierStars } from "./supplier-stars"
-import { highlights } from "./suppliers-data"
 
-export function SupplierHighlights() {
+const icons = {
+  banknote: Banknote,
+  clock: Clock,
+  trending: TrendingUp,
+}
+
+export function SupplierHighlights({ highlights }: { highlights: SupplierHighlight[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
       {highlights.map((item) => {
-        const Icon = item.icon
+        const Icon = icons[item.iconKey]
 
         return (
           <Card

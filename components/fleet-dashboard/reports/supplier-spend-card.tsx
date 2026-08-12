@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
+import type { SupplierSpendPoint } from "@/lib/fleet-analytics"
 
-import { supplierSpend } from "./reports-data"
-
-export function SupplierSpendCard() {
+export function SupplierSpendCard({ supplierSpend }: { supplierSpend: SupplierSpendPoint[] }) {
   return (
     <div>
       <Card className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] shadow-none">
@@ -67,6 +66,13 @@ export function SupplierSpendCard() {
                       </td>
                     </tr>
                   ))}
+                  {!supplierSpend.length ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-sm text-[#9CA3AF]">
+                        Supplier spend will appear after orders are created.
+                      </td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>

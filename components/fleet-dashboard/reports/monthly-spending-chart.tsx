@@ -12,8 +12,7 @@ import {
 } from "recharts"
 
 import { Card, CardContent } from "@/components/ui/card"
-
-import { spendingTrend } from "./reports-data"
+import type { SpendingTrendPoint } from "@/lib/fleet-analytics"
 
 function CustomTooltip({
   active,
@@ -44,7 +43,11 @@ function CustomTooltip({
   )
 }
 
-export function MonthlySpendingChart() {
+export function MonthlySpendingChart({ data }: { data: SpendingTrendPoint[] }) {
+  const avgMonthly = data.length
+    ? data.reduce((total, item) => total + item.actual, 0) / data.length
+    : 0
+
   return (
     <Card className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] shadow-none">
       <CardContent className="p-6">
@@ -54,19 +57,21 @@ export function MonthlySpendingChart() {
               Monthly Spending Trend
             </h3>
             <p className="text-sm text-[#9CA3AF]">
-              Actual spending vs. budget target
+              Actual spending vs. calculated budget target
             </p>
           </div>
 
           <div className="text-right">
             <div className="text-sm text-[#9CA3AF]">Avg Monthly</div>
-            <div className="text-xl font-bold text-white">AED 50.2K</div>
+            <div className="text-xl font-bold text-white">
+              AED {Math.round(avgMonthly).toLocaleString("en-AE")}
+            </div>
           </div>
         </div>
 
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={spendingTrend}>
+            <LineChart data={data}>
               <CartesianGrid stroke="#2A2A2A" strokeDasharray="3 3" />
               <XAxis dataKey="month" stroke="#9CA3AF" />
               <YAxis stroke="#9CA3AF" />
