@@ -59,6 +59,7 @@ export function AppSidebar({
   const currentPath = stripBasePath(usePathname())
   const effectiveVisibleMenus = visibleMenus.length ? visibleMenus : isOwner || !planName ? fallbackMenuKeysWithoutApiAccess : []
   const visibleMenuSet = new Set(["settings", ...(isOwner ? ["overview", "plans", "add-ons"] : []), ...effectiveVisibleMenus])
+  if (/\bfree\b/i.test(planName ?? "")) visibleMenuSet.delete("api-keys")
 
   return (
     <Sidebar className="border-sidebar-border bg-[#1A1A1A] text-white">
@@ -79,12 +80,10 @@ export function AppSidebar({
                 <span className="flex h-7 w-7 items-center justify-center rounded-md border border-primary/25 bg-primary/10 text-primary">
                   <BadgeCheck className="h-4 w-4" />
                 </span>
-                Current plan
+                {planName}
               </span>
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.12)]" />
             </div>
-            <p className="mt-3 truncate text-sm font-semibold text-white">{planName}</p>
-            <p className="mt-1 text-xs text-muted-foreground group-hover:text-white/80">Manage or upgrade</p>
           </Link>
         ) : null}
       </SidebarHeader>

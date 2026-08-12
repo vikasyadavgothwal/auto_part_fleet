@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Search, Trash2 } from "lucide-react"
+import { Check, Pencil, Search, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -23,12 +23,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/toast-provider"
 import {
   canCreateRoles,
@@ -72,31 +66,12 @@ function permissionNames(permissionIds: string[], permissions: PermissionItem[])
     .join(", ")
 }
 
-function selectedPermissionLabel(
-  selectedPermissionIds: string[],
-  permissions: PermissionItem[],
-) {
-  if (selectedPermissionIds.length === 0) {
-    return "Select permissions"
-  }
-
-  const map = new Map(permissions.map((item) => [item.id, item]))
-  const selectedNames = selectedPermissionIds
-    .map((id) => map.get(id)?.name ?? "Permission")
-    .filter(Boolean)
-  const extraCount = Math.max(selectedNames.length - 3, 0)
-  const visibleNames = selectedNames.slice(0, 3)
-  return extraCount > 0
-    ? `${visibleNames.join(", ")} +${extraCount} more`
-    : visibleNames.join(", ")
-}
-
-function selectedPermissionNames(
+function selectedPermissionEntries(
   selectedPermissionIds: string[],
   permissions: PermissionItem[],
 ) {
   const map = new Map(permissions.map((item) => [item.id, item]))
-  return selectedPermissionIds.map((id) => map.get(id)?.name ?? "Permission")
+  return selectedPermissionIds.map((id) => map.get(id)).filter((item): item is PermissionItem => Boolean(item))
 }
 
 export function FleetRolesPage({
@@ -434,62 +409,11 @@ export function FleetRolesPage({
                 <Label className="text-sm text-white">Permissions</Label>
                 <span className="text-xs text-[#9CA3AF]">{selectedPermissionIds.length} selected</span>
               </div>
-              {permissions.length ? (
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="min-h-10 w-full justify-between bg-[#0b1220] px-3 text-left text-white hover:text-white"
-                    >
-                      {selectedPermissionLabel(selectedPermissionIds, permissions)}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-[min(420px,calc(100vw-3rem))] border-[#334155] bg-[#111827] p-0 text-white" align="start">
-                    <div className="border-b border-[#334155] p-3">
-                      <div className="relative">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9CA3AF]" />
-                        <Input
-                          value={permissionQuery}
-                          onChange={(event) => setPermissionQuery(event.target.value)}
-                          onKeyDown={(event) => event.stopPropagation()}
-                          placeholder="Search permissions"
-                          className="h-10 border-[#334155] bg-[#0b1220] pl-9 text-white"
-                        />
-                      </div>
-                    </div>
-                    <div className="max-h-56 overflow-y-auto p-2">
-                      {filteredPermissions.length ? (
-                        filteredPermissions.map((permission) => (
-                          <DropdownMenuCheckboxItem
-                            key={permission.id}
-                            checked={selectedPermissionIds.includes(permission.id)}
-                            onCheckedChange={() => togglePermission(permission.id)}
-                            onSelect={(event) => event.preventDefault()}
-                            className="min-h-11"
-                          >
-                            <div className="flex flex-col">
-                              <span>{permission.name}</span>
-                              <span className="text-xs text-[#9CA3AF]">{permission.code}</span>
-                            </div>
-                          </DropdownMenuCheckboxItem>
-                        ))
-                      ) : (
-                        <p className="px-3 py-6 text-center text-sm text-[#9CA3AF]">No permissions found.</p>
-                      )}
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <p className="text-sm text-[#9CA3AF]">No permissions available.</p>
-              )}
+              {permissions.length ? <div className="overflow-hidden rounded-md border border-[#334155] bg-[#0b1220]">
+                <div className="border-b border-[#334155] p-3"><div className="flex flex-wrap gap-2">{selectedPermissionEntries(selectedPermissionIds, permissions).map((permission) => <button key={permission.id} type="button" onClick={() => togglePermission(permission.id)} className="inline-flex items-center gap-1 rounded-full border border-blue-400/30 bg-blue-400/10 px-2.5 py-1 text-xs text-blue-200 transition hover:bg-blue-400/20" aria-label={`Remove ${permission.name}`}>{permission.name}<X className="size-3.5" /></button>)}{!selectedPermissionIds.length ? <p className="text-xs text-[#9CA3AF]">No permissions selected yet. Choose the access this role should have.</p> : null}</div></div>
+                <div className="space-y-3 p-3"><div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9CA3AF]" /><Input value={permissionQuery} onChange={(event) => setPermissionQuery(event.target.value)} placeholder="Search permissions by name or code" className="h-10 border-[#334155] bg-[#111827] pl-9 text-white" /></div><div className="flex items-center justify-between gap-3 text-xs text-[#9CA3AF]"><span>{filteredPermissions.length} permission{filteredPermissions.length === 1 ? "" : "s"} shown</span><div className="flex gap-1"><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs text-blue-200 hover:bg-blue-400/10 hover:text-blue-100" onClick={() => setSelectedPermissionIds((current) => Array.from(new Set([...current, ...filteredPermissions.map((permission) => permission.id)])))}>Select shown</Button><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs text-[#9CA3AF] hover:bg-[#1f2937] hover:text-white" onClick={() => setSelectedPermissionIds([])}>Clear</Button></div></div><div className="grid max-h-64 gap-2 overflow-y-auto pr-1">{filteredPermissions.length ? filteredPermissions.map((permission) => { const selected = selectedPermissionIds.includes(permission.id); return <button key={permission.id} type="button" aria-pressed={selected} onClick={() => togglePermission(permission.id)} className={`flex items-start gap-3 rounded-md border p-3 text-left transition ${selected ? "border-blue-400/40 bg-blue-400/10" : "border-[#334155] bg-[#111827] hover:border-blue-400/30 hover:bg-[#172033]"}`}><span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border ${selected ? "border-blue-400 bg-blue-500 text-white" : "border-[#64748b]"}`}>{selected ? <Check className="size-3.5" /> : null}</span><span className="min-w-0"><span className="block text-sm font-medium text-white">{permission.name}</span><span className="block truncate text-xs text-[#9CA3AF]">{permission.code}{permission.description ? ` - ${permission.description}` : ""}</span></span></button> }) : <p className="px-3 py-6 text-center text-sm text-[#9CA3AF]">No permissions found.</p>}</div></div>
+              </div> : <p className="text-sm text-[#9CA3AF]">No permissions available.</p>}
             </div>
-
-            {selectedPermissionIds.length ? (
-              <p className="text-xs text-[#9CA3AF]">
-                Selected: {selectedPermissionNames(selectedPermissionIds, permissions).join(", ")}
-              </p>
-            ) : null}
 
             {message ? <p className="text-sm text-red-300">{message}</p> : null}
             <DialogFooter>
