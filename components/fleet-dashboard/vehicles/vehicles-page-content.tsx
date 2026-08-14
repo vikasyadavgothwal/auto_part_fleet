@@ -86,8 +86,8 @@ function validateVehicleForm(data: FormData, isEditing: boolean) {
   }
   if (!values.make) return { error: "Make / Brand is required.", values }
   if (!values.model) return { error: "Model is required.", values }
-  if (!values.mileage || !Number.isInteger(mileage) || mileage > 2_000_000) {
-    return { error: "Mileage must be a whole number up to 2,000,000.", values }
+  if (!values.mileage || !Number.isInteger(mileage) || mileage < 1 || mileage > 70) {
+    return { error: "Mileage must be a whole number between 1 and 70.", values }
   }
   if (!["active", "maintenance", "inactive"].includes(values.status)) {
     return { error: "Select a valid vehicle status.", values }
@@ -421,7 +421,7 @@ export function VehiclesPageContent({
           <form key={editingVehicle?.id ?? "create"} noValidate className="space-y-5" onSubmit={saveVehicle}>
             {!editingVehicle ? (
               <div className="space-y-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4">
-                <Label htmlFor="create-vin">VIN first</Label>
+                <Label htmlFor="create-vin">VIN first *</Label>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Input id="create-vin" name="vin" value={createVin} maxLength={17} placeholder="JT2BF22K6X0123456" className="bg-[#0A0A0A] uppercase" onChange={(event) => { setCreateVin(normalizeVin(event.target.value)); setResolvedVehicle(null); setManualVehicleEntry(false); setVinLookupMessage("") }} />
                   <Button type="button" disabled={vinLookupPending || createVin.length !== 17} onClick={() => void lookupVin()}>{vinLookupPending ? "Searching..." : "Find Vehicle"}</Button>
@@ -435,12 +435,13 @@ export function VehiclesPageContent({
             <div className="grid gap-4 sm:grid-cols-2">
               {(editingVehicle ? vehicleFields : createVehicleFields).map(([name, label, type]) => (
                 <div key={name} className="space-y-2">
-                  <Label htmlFor={name}>{label}</Label>
+                  <Label htmlFor={name}>{["vehicleName", "mileage", "year", "make", "model"].includes(name) ? `${label} *` : label}</Label>
                   <Input
                     id={name}
                     name={name}
                     type={type}
-                    min={type === "number" ? 0 : undefined}
+                    min={name === "mileage" ? 1 : type === "number" ? 0 : undefined}
+                    max={name === "mileage" ? 70 : name === "year" ? currentVehicleYear : undefined}
                     maxLength={type === "text" ? (name === "vehicleName" || name === "driver" ? 120 : 80) : undefined}
                     defaultValue={editingVehicle?.[name] ?? (name === "year" ? resolvedVehicle?.year : name === "make" ? resolvedVehicle?.make : name === "model" ? resolvedVehicle?.model : name === "vehicleName" ? resolvedVehicle?.vehicleName : name === "trim" ? resolvedVehicle?.trim : "")}
                     readOnly={!editingVehicle && Boolean(resolvedVehicle) && ["year", "make", "model", "vehicleName"].includes(name)}

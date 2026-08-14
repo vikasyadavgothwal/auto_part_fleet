@@ -608,7 +608,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="company-name">Company Name</Label>
+              <Label htmlFor="company-name">Company Name *</Label>
             <Input
               id="company-name"
               value={form.companyName}

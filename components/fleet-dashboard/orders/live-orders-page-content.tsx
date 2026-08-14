@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/toast-provider"
 import { authenticatedFetch } from "@/lib/auth/client"
 import { appPath } from "@/lib/routes"
 import { PageHeading } from "../shared/page-heading"
@@ -53,6 +54,7 @@ export function LiveOrdersPageContent({ initialOrders, initialPagination, initia
   const [selected, setSelected] = React.useState<LiveOrder | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState("")
+  const { showToast } = useToast()
 
   const load = async (page: number, query = search) => {
     setLoading(true)
@@ -66,7 +68,7 @@ export function LiveOrdersPageContent({ initialOrders, initialPagination, initia
       setPagination(payload.pagination)
       setSummary(payload.summary)
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to load orders")
+      const message = caught instanceof Error ? caught.message : "Unable to load orders"; setError(message); showToast({ type: "error", title: "Unable to load orders", message })
     } finally {
       setLoading(false)
     }
@@ -82,7 +84,7 @@ export function LiveOrdersPageContent({ initialOrders, initialPagination, initia
   return <div className="min-h-screen bg-[#0A0A0A]"><div className="space-y-8">
     <PageHeading title="Fleet Orders" description="Track RFQ and direct orders for your fleet." />
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">{stats.map((stat) => <Card key={stat.title} className="border-[#2A2A2A] bg-[#1A1A1A]"><CardContent className="p-6"><p className="mb-2 text-sm text-[#9CA3AF]">{stat.title}</p><p className={`text-3xl font-bold ${stat.valueClass}`}>{stat.value}</p></CardContent></Card>)}</div>
-    <form className="flex max-w-2xl gap-2" onSubmit={(event) => { event.preventDefault(); void load(1) }}><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search order ID, RFQ, supplier, or part..." className="border-[#2A2A2A] bg-[#1A1A1A] pl-9 text-white" /></div><Button type="submit" disabled={loading} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Search</Button>{search ? <Button type="button" variant="outline" onClick={() => { setSearch(""); void load(1, "") }}>Clear</Button> : null}</form>
+    <form className="flex max-w-2xl gap-2" onSubmit={(event) => { event.preventDefault(); if (search.length > 100) { showToast({ type: "error", title: "Search is too long", message: "Search must be 100 characters or fewer." }); return }; void load(1) }}><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" /><Input value={search} maxLength={100} onChange={(event) => setSearch(event.target.value)} placeholder="Search order ID, RFQ, supplier, or part..." className="border-[#2A2A2A] bg-[#1A1A1A] pl-9 text-white" /></div><Button type="submit" disabled={loading} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Search</Button>{search ? <Button type="button" variant="outline" onClick={() => { setSearch(""); void load(1, "") }}>Clear</Button> : null}</form>
     {error ? <p className="text-sm text-red-400">{error}</p> : null}
     <div className="overflow-hidden rounded-lg border border-[#2A2A2A] bg-[#1A1A1A]"><div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-sm"><thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th className="p-4 text-left">Order ID</th><th className="p-4 text-left">Date</th><th className="p-4 text-left">Supplier</th><th className="p-4 text-left">Type</th><th className="p-4 text-left">Parts</th><th className="p-4 text-left">Vehicle</th><th className="p-4 text-left">Total</th><th className="p-4 text-left">Status</th><th className="p-4 text-left">Actions</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} className="border-t border-[#2A2A2A] text-[#9CA3AF] hover:bg-[#242424]"><td className="p-4 font-semibold text-[#DC2626]">{order.publicId}</td><td className="p-4">{new Date(order.createdAt).toLocaleDateString("en-AE")}</td><td className="p-4 text-white">{supplierName(order)}</td><td className="p-4">{order.source === "rfq" ? "RFQ" : "Direct"}</td><td className="p-4">{order.items[0]?.partName || "-"}{order.items.length > 1 ? ` +${order.items.length - 1}` : ""}</td><td className="p-4">{order.rfq ? [order.rfq.vehicleYear, order.rfq.vehicleMake, order.rfq.vehicleModel].filter(Boolean).join(" ") : "-"}</td><td className="p-4 font-semibold text-white">{money(order.totalAmount)}</td><td className="p-4"><div className="min-w-32"><StatusBadge status={labelStatus(order.status)} /><div className="mt-2 h-1.5 rounded-full bg-[#2A2A2A]"><div className="h-full rounded-full bg-[#DC2626]" style={{ width: `${order.deliveryProgress}%` }} /></div><p className="mt-1 text-xs">{order.deliveryProgress}% delivered</p></div></td><td className="p-4"><Button size="sm" variant="secondary" className="bg-[#2A2A2A] text-white hover:bg-[#DC2626]" onClick={() => setSelected(order)}>View</Button></td></tr>)}</tbody></table></div>{!orders.length && !loading ? <p className="p-8 text-center text-[#9CA3AF]">No orders found.</p> : null}</div>
     <div className="flex flex-col gap-3 text-sm text-[#9CA3AF] sm:flex-row sm:items-center sm:justify-between"><p>Showing {orders.length ? (pagination.page - 1) * pagination.pageSize + 1 : 0}-{Math.min(pagination.page * pagination.pageSize, pagination.total)} of {pagination.total}</p><div className="flex items-center gap-2"><Button variant="outline" size="sm" disabled={loading || pagination.page <= 1} onClick={() => void load(pagination.page - 1)}>Previous</Button><span>Page {pagination.page} of {pagination.totalPages}</span><Button variant="outline" size="sm" disabled={loading || pagination.page >= pagination.totalPages} onClick={() => void load(pagination.page + 1)}>Next</Button></div></div>

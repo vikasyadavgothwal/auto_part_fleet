@@ -59,7 +59,7 @@ export function FleetRfqsPageContent({ initialRfqs, initialPagination, createdRf
     <PageHeading title="Fleet RFQs" description="Manage bulk procurement requests for your fleet." action={<Link href={appRoutes.createRfq}><Button className="gap-2 bg-[#DC2626] text-white hover:bg-[#B91C1C]"><Plus className="h-5 w-5" />Create Bulk RFQ</Button></Link>} />
     <RfqStatCards rfqs={rfqs} />
     <form className="flex max-w-2xl gap-2" onSubmit={(event) => { event.preventDefault(); void load(1) }}>
-      <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search RFQ ID, project, vehicle, VIN, or part..." className="border-[#2A2A2A] bg-[#1A1A1A] pl-9 text-white" /></div>
+      <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" /><Input value={search} maxLength={100} onChange={(event) => setSearch(event.target.value)} placeholder="Search RFQ ID, project, vehicle, VIN, or part..." className="border-[#2A2A2A] bg-[#1A1A1A] pl-9 text-white" /></div>
       <Button type="submit" disabled={loading} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Search</Button>
       {search ? <Button type="button" variant="outline" onClick={() => { setSearch(""); void load(1, "") }}>Clear</Button> : null}
     </form>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/toast-provider"
 import { authenticatedFetch } from "@/lib/auth/client"
 import { appPath } from "@/lib/routes"
 
@@ -25,6 +26,7 @@ type AccountResponse = {
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function AccountSettingsCard({ initialAccount }: { initialAccount?: Account | null }) {
+  const { showToast } = useToast()
   const [form, setForm] = useState({
     firstName: initialAccount?.firstName ?? "",
     lastName: initialAccount?.lastName ?? "",
@@ -60,9 +62,10 @@ export function AccountSettingsCard({ initialAccount }: { initialAccount?: Accou
     const email = form.email.trim().toLowerCase()
     setMessage(null)
     setError(null)
-    if (!firstName) return setError("First name is required.")
-    if (!lastName) return setError("Last name is required.")
-    if (!email || email.length > 254 || !emailPattern.test(email)) return setError("Enter a valid email address.")
+    if (!firstName) { const message = "First name is required."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
+    if (!lastName) { const message = "Last name is required."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
+    if (firstName.length > 100 || lastName.length > 100) { const message = "Names must be 100 characters or fewer."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
+    if (!email || email.length > 254 || !emailPattern.test(email)) { const message = "Enter a valid email address."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
 
     setIsSaving(true)
     try {
@@ -80,9 +83,9 @@ export function AccountSettingsCard({ initialAccount }: { initialAccount?: Accou
         lastName: payload.account.lastName ?? "",
         email: payload.account.email ?? "",
       })
-      setMessage("Account updated successfully.")
+      setMessage("Account updated successfully."); showToast({ type: "success", title: "Account updated", message: "Account details saved successfully." })
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Unable to update account.")
+      const message = saveError instanceof Error ? saveError.message : "Unable to update account."; setError(message); showToast({ type: "error", title: "Unable to update account", message })
     } finally {
       setIsSaving(false)
     }
@@ -96,15 +99,15 @@ export function AccountSettingsCard({ initialAccount }: { initialAccount?: Accou
       <CardContent>
         <form onSubmit={submit} noValidate className="grid gap-5 md:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="account-first-name">First Name</Label>
+            <Label htmlFor="account-first-name">First Name *</Label>
             <Input id="account-first-name" value={form.firstName} onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))} maxLength={100} className="border-border bg-brand-surface" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="account-last-name">Last Name</Label>
+            <Label htmlFor="account-last-name">Last Name *</Label>
             <Input id="account-last-name" value={form.lastName} onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))} maxLength={100} className="border-border bg-brand-surface" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="account-email">Email</Label>
+            <Label htmlFor="account-email">Email *</Label>
             <Input id="account-email" type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} maxLength={254} className="border-border bg-brand-surface" />
           </div>
           {error ? <p className="text-sm text-destructive md:col-span-3">{error}</p> : null}

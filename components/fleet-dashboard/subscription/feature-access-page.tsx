@@ -184,9 +184,13 @@ export function FleetFeatureAccessPage({
   async function createTicket(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!accountId) return
+    const normalizedSubject = subject.trim()
+    const normalizedMessage = ticketMessage.trim()
+    if (!normalizedSubject || !normalizedMessage) return showToast({ type: "error", title: "Check support ticket", message: "Subject and message are required." })
+    if (normalizedSubject.length > 150 || normalizedMessage.length > 2000) return showToast({ type: "error", title: "Check support ticket", message: "Subject must be 150 characters and message 2,000 characters or fewer." })
     setIsCreatingTicket(true)
     try {
-      const response = await fetch(appPath("/api/business/help-tickets"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ businessAccountId: accountId, subject, message: ticketMessage, category: category || undefined }) })
+      const response = await fetch(appPath("/api/business/help-tickets"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ businessAccountId: accountId, subject: normalizedSubject, message: normalizedMessage, category: category || undefined }) })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok || payload?.ok === false) throw new Error(payload?.message ?? "Unable to create support ticket")
       setSubject(""); setTicketMessage(""); setCategory(""); setIsTicketDialogOpen(false); showToast({ type: "success", title: "Support ticket created", message: "We will contact you shortly and help resolve your problem." })
@@ -205,7 +209,7 @@ export function FleetFeatureAccessPage({
         </div>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={faqQuery} onChange={(event) => setFaqQuery(event.target.value)} placeholder="Search support center" className="h-11 pl-9" />
+          <Input value={faqQuery} maxLength={100} onChange={(event) => setFaqQuery(event.target.value)} placeholder="Search support center" className="h-11 pl-9" />
         </div>
       </div>
     </section>
@@ -302,8 +306,8 @@ export function FleetFeatureAccessPage({
         </DialogHeader>
         <form onSubmit={createTicket} className="grid gap-3">
           {support.ticketCategories.length ? <select className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary" value={category} onChange={(event) => setCategory(event.target.value)} required><option value="">Select support option</option>{support.ticketCategories.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select> : null}
-          <input className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary" placeholder="Subject" value={subject} onChange={(event) => setSubject(event.target.value)} required />
-          <textarea className="min-h-32 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary" placeholder="Message" value={ticketMessage} onChange={(event) => setTicketMessage(event.target.value)} required />
+          <label className="grid gap-1"><span className="text-xs text-muted-foreground">Subject *</span><input className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary" placeholder="Subject" value={subject} onChange={(event) => setSubject(event.target.value)} maxLength={150} required /></label>
+          <label className="grid gap-1"><span className="text-xs text-muted-foreground">Message *</span><textarea className="min-h-32 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary" placeholder="Message" value={ticketMessage} onChange={(event) => setTicketMessage(event.target.value)} maxLength={2000} required /></label>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsTicketDialogOpen(false)} disabled={isCreatingTicket}>Cancel</Button>
             <Button type="submit" disabled={isCreatingTicket}>{isCreatingTicket ? "Creating..." : "Create Ticket"}</Button>

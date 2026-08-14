@@ -35,6 +35,7 @@ type AddressesPayload = {
 }
 
 const validateAddressForm = (values: FleetAddressFormValues) => {
+  if (values.label.trim().length > 100 || values.recipientName.trim().length > 120) return "Address label must be 100 characters and recipient name 120 characters or fewer"
   if (!values.label.trim()) return "Address label is required"
   if (!values.recipientName.trim()) return "Recipient name is required"
   if (!values.phone.trim()) return "Phone number is required"
@@ -42,6 +43,7 @@ const validateAddressForm = (values: FleetAddressFormValues) => {
     return "Enter a valid phone number"
   }
   if (!values.addressLine1.trim()) return "Address line 1 is required"
+  if (values.addressLine1.trim().length > 180 || values.addressLine2.trim().length > 180 || values.landmark.trim().length > 120) return "Address fields exceed their allowed length"
   if (!values.city.trim()) return "City is required"
   if (!values.state.trim()) return "State is required"
   if (!/^[A-Za-z0-9 -]{3,20}$/.test(values.postalCode.trim())) {
@@ -556,46 +558,56 @@ function AddressFields({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-label`}>Address Label</Label>
+        <Label htmlFor={`${prefix}-label`}>Address Label *</Label>
         <Input
           id={`${prefix}-label`}
           value={values.label}
+          maxLength={100}
+          required
           onChange={(event) => onChange("label", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-recipient`}>Recipient Name</Label>
+        <Label htmlFor={`${prefix}-recipient`}>Recipient Name *</Label>
         <Input
           id={`${prefix}-recipient`}
           value={values.recipientName}
+          maxLength={120}
+          required
           onChange={(event) => onChange("recipientName", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-phone`}>Phone</Label>
+        <Label htmlFor={`${prefix}-phone`}>Phone *</Label>
         <Input
           id={`${prefix}-phone`}
           value={values.phone}
+          maxLength={25}
+          required
           onChange={(event) => onChange("phone", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-postal`}>Postal Code</Label>
+        <Label htmlFor={`${prefix}-postal`}>Postal Code *</Label>
         <Input
           id={`${prefix}-postal`}
           value={values.postalCode}
+          maxLength={20}
+          required
           onChange={(event) => onChange("postalCode", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2 md:col-span-2">
-        <Label htmlFor={`${prefix}-line-1`}>Address Line 1</Label>
+        <Label htmlFor={`${prefix}-line-1`}>Address Line 1 *</Label>
         <Input
           id={`${prefix}-line-1`}
           value={values.addressLine1}
+          maxLength={180}
+          required
           onChange={(event) => onChange("addressLine1", event.target.value)}
           className={inputClassName}
         />
@@ -605,6 +617,7 @@ function AddressFields({
         <Input
           id={`${prefix}-line-2`}
           value={values.addressLine2}
+          maxLength={180}
           onChange={(event) => onChange("addressLine2", event.target.value)}
           className={inputClassName}
         />
@@ -614,33 +627,40 @@ function AddressFields({
         <Input
           id={`${prefix}-landmark`}
           value={values.landmark}
+          maxLength={120}
           onChange={(event) => onChange("landmark", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-city`}>City</Label>
+        <Label htmlFor={`${prefix}-city`}>City *</Label>
         <Input
           id={`${prefix}-city`}
           value={values.city}
+          maxLength={80}
+          required
           onChange={(event) => onChange("city", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-state`}>State</Label>
+        <Label htmlFor={`${prefix}-state`}>State *</Label>
         <Input
           id={`${prefix}-state`}
           value={values.state}
+          maxLength={80}
+          required
           onChange={(event) => onChange("state", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-country`}>Country</Label>
+        <Label htmlFor={`${prefix}-country`}>Country *</Label>
         <Input
           id={`${prefix}-country`}
           value={values.country}
+          maxLength={80}
+          required
           onChange={(event) => onChange("country", event.target.value)}
           className={inputClassName}
         />

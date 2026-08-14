@@ -98,6 +98,7 @@ export function FleetStaffPage({ access, membersPayload, rolesPayload }: { acces
     if (!access?.businessAccount?.id) return "Account context is not available."
     if (!normalizedFirstName) return "Staff first name is required."
     if (!normalizedLastName) return "Staff last name is required."
+    if (normalizedFirstName.length > 100 || normalizedLastName.length > 100) return "Staff names must be 100 characters or fewer."
     if (!normalizedEmail) return "Staff email is required."
     if (normalizedEmail.length > 254 || !emailPattern.test(normalizedEmail)) return "Enter a valid staff email address."
     if (!roles.length) return "Create at least one role before creating staff."
@@ -125,6 +126,7 @@ export function FleetStaffPage({ access, membersPayload, rolesPayload }: { acces
     if (!access?.businessAccount?.id) return showMemberError("Account context is not available.")
     if (!editingFirstName.trim()) return showMemberError("Staff first name is required.")
     if (!editingLastName.trim()) return showMemberError("Staff last name is required.")
+    if (editingFirstName.trim().length > 100 || editingLastName.trim().length > 100) return showMemberError("Staff names must be 100 characters or fewer.")
     if (editingRoles.size === 0) return showMemberError("Select at least one role for this staff account.")
     setMemberLoading(true); setMemberMessage(null)
     try {
