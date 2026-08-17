@@ -93,6 +93,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
   const [selectedAddressId, setSelectedAddressId] = React.useState("")
   const [isLoadingAddresses, setIsLoadingAddresses] = React.useState(false)
   const [error, setError] = React.useState("")
+  const [createdOrderId, setCreatedOrderId] = React.useState<string | null>(null)
   const selected = rfqs.find((rfq) => rfq.id === selectedId) ?? null
   const confirmBid = selected?.bids.find((bid) => bid.id === confirmBidId) ?? null
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null
@@ -180,8 +181,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
       const payload = await response.json() as { ok: boolean; order?: NonNullable<FleetRfq["order"]>; message?: string }
       if (!response.ok || !payload.ok || !payload.order) throw new Error(payload.message || "Unable to accept quote")
       onAccepted(selected.id, bidId, payload.order)
-      window.alert("Payment Successful")
-      window.alert("Your order has been created successfully.")
+      setCreatedOrderId(payload.order.publicId)
       setConfirmBidId(null)
       setSelectedAddressId("")
     } catch (caught) {
@@ -358,6 +358,18 @@ export function RfqsTable({ rfqs, onAccepted }: {
         <DialogFooter>
           <Button variant="outline" disabled={Boolean(accepting)} onClick={() => setConfirmBidId(null)}>Cancel</Button>
           <Button disabled={!confirmBid || Boolean(accepting) || !selectedAddressId} onClick={() => confirmBid && void acceptBid(confirmBid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">{accepting ? "Creating order..." : "Accept Bid & Create Order"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    <Dialog open={Boolean(createdOrderId)} onOpenChange={(open) => { if (!open) setCreatedOrderId(null) }}>
+      <DialogContent className="border-[#2A2A2A] bg-[#151515] text-white sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Payment successful</DialogTitle>
+          <DialogDescription>Your order has been created successfully.</DialogDescription>
+        </DialogHeader>
+        {createdOrderId ? <p className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4 text-sm">Order: <span className="font-semibold text-green-400">{createdOrderId}</span></p> : null}
+        <DialogFooter>
+          <Button type="button" onClick={() => setCreatedOrderId(null)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Done</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
