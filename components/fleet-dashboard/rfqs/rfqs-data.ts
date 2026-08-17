@@ -6,6 +6,7 @@ export type FleetRfqBid = {
   validUntil: string | null
   notes: string | null
   status: "submitted" | "accepted" | "rejected" | "withdrawn"
+  featuredSupplier?: boolean
   createdAt: string
   items: Array<{
     id: string
