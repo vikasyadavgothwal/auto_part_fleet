@@ -17,9 +17,9 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/toast-provider"
 import { authenticatedFetch } from "@/lib/auth/client"
 import {
+  ensureFirebaseAuthConfigured,
   getFirebaseAuthDiagnostics,
   getFirebaseAuth,
-  isFirebaseAuthConfigured,
 } from "@/lib/auth/firebase-client"
 import {
   formFromProfile,
@@ -347,15 +347,15 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
       showToast({ type: "error", title: "Check mobile", message })
       return
     }
-    if (!isFirebaseAuthConfigured()) {
-      const message = "Firebase phone authentication is not configured"
-      setError(message)
-      showToast({ type: "error", title: "Unable to send OTP", message })
-      return
-    }
-
     setIsSendingOtp(true)
     try {
+      if (!(await ensureFirebaseAuthConfigured())) {
+        const message = "Firebase phone authentication is not configured"
+        setError(message)
+        showToast({ type: "error", title: "Unable to send OTP", message })
+        return
+      }
+
       const checkResponse = await authenticatedFetch(
         appPath("/api/settings/mobile-otp/check"),
         {
@@ -402,7 +402,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
 
     try {
       if (!mobileVerificationId) throw new Error("Send OTP first")
-      if (!isFirebaseAuthConfigured()) {
+      if (!(await ensureFirebaseAuthConfigured())) {
         throw new Error("Firebase phone authentication is not configured")
       }
       const credential = PhoneAuthProvider.credential(mobileVerificationId, otp)
