@@ -201,6 +201,8 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
     setMobileCountryCode(countryCode)
     setMobileLocalNumber(digits)
     setField("phone", buildMobileNumber(countryCode, digits))
+    setMobileVerificationId("")
+    setOtp("")
   }
 
   const validateForm = () => {
@@ -246,6 +248,15 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
     if (validationError) {
       setError(validationError)
       showToast({ type: "error", title: "Check settings", message: validationError })
+      return
+    }
+    if (
+      normalizeMobileValue(form.phone) !==
+      normalizeMobileValue(currentProfile.phone ?? "")
+    ) {
+      const message = "Verify the mobile number with OTP before saving"
+      setError(message)
+      showToast({ type: "error", title: "Check mobile", message })
       return
     }
 
@@ -398,6 +409,12 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
   const verifyMobileOtp = async () => {
     setError("")
     setMessage("")
+    if (!/^\d{6}$/.test(otp)) {
+      const message = "Enter the 6-digit OTP"
+      setError(message)
+      showToast({ type: "error", title: "Check OTP", message })
+      return
+    }
     setIsVerifyingOtp(true)
 
     try {
@@ -590,7 +607,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
                   type="button"
                   variant="outline"
                   onClick={verifyMobileOtp}
-                  disabled={isVerifyingOtp || !otp.trim()}
+                  disabled={isVerifyingOtp || !/^\d{6}$/.test(otp)}
                   className="gap-2"
                 >
                   <CheckCircle2 className="size-4" />
@@ -716,7 +733,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
           <div className="md:col-span-2">
             <Button
               type="submit"
-              disabled={isSaving}
+              disabled={isSaving || phoneChanged}
               className="gap-2 bg-[#DC2626] text-white hover:bg-[#B91C1C]"
             >
               <Save className="size-4" />
