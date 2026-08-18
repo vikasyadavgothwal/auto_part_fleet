@@ -581,8 +581,9 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
                   onChange={(event) =>
                     setOtp(normalizeDigits(event.target.value, 6))
                   }
-                  placeholder="OTP"
+                  placeholder="Enter 6-digit OTP"
                   inputMode="numeric"
+                  autoComplete="one-time-code"
                   maxLength={6}
                   className="h-9 border-[#2A2A2A] bg-[#0A0A0A] sm:max-w-32"
                 />
