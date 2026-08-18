@@ -153,8 +153,18 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
     ])
   }
 
-  async function importRfqFile(file: File | undefined) {
-    if (!file) return
+async function importRfqFile(file: File | undefined) {
+  if (!file) return
+  const allowedTypes = [".csv", ".xlsx", ".xls"]
+  const extension = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`
+  if (!allowedTypes.includes(extension)) {
+    const message = "Upload a CSV, XLSX, or XLS file."
+    setSubmitError(message); showToast({ type: "error", title: "Invalid RFQ file", message }); return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    const message = "RFQ import files must be 5 MB or smaller."
+    setSubmitError(message); showToast({ type: "error", title: "RFQ file too large", message }); return
+  }
     setIsImporting(true)
     setSubmitError("")
     try {

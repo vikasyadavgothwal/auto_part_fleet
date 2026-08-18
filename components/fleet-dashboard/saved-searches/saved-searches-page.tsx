@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Search, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/toast-provider"
 import { appPath, appRoutes } from "@/lib/routes"
 
 type SavedSearch = {
@@ -60,6 +61,7 @@ export function FleetSavedSearchesPage({
   initialSavedSearches: SavedSearch[]
 }) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [name, setName] = useState("")
   const [scope, setScope] = useState<(typeof scopeOptions)[number]["value"]>("fleet.rfqs")
   const [queryText, setQueryText] = useState("")
@@ -77,9 +79,15 @@ export function FleetSavedSearchesPage({
   async function saveSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!accountId || !canSave) {
-      setMessage(access?.actions?.["saved-searches.create"]?.reason ?? "Saved searches are not available on this plan.")
+      const error = access?.actions?.["saved-searches.create"]?.reason ?? "Saved searches are not available on this plan."
+      setMessage(error); showToast({ type: "error", title: "Unable to save search", message: error })
       return
     }
+    const normalizedName = name.trim()
+    const normalizedQuery = queryText.trim()
+    if (!normalizedName) { const error = "Search name is required."; setMessage(error); showToast({ type: "error", title: "Check saved search", message: error }); return }
+    if (normalizedName.length > 100) { const error = "Search name must be 100 characters or fewer."; setMessage(error); showToast({ type: "error", title: "Check saved search", message: error }); return }
+    if (normalizedQuery.length > 200) { const error = "Search text must be 200 characters or fewer."; setMessage(error); showToast({ type: "error", title: "Check saved search", message: error }); return }
     setIsSaving(true)
     setMessage(null)
     try {
@@ -88,9 +96,9 @@ export function FleetSavedSearchesPage({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           businessAccountId: accountId,
-          name,
+          name: normalizedName,
           scope,
-          query: { q: queryText.trim() },
+          query: { q: normalizedQuery },
         }),
       })
       const payload = await response.json().catch(() => null) as { message?: string } | null
@@ -98,9 +106,10 @@ export function FleetSavedSearchesPage({
       setName("")
       setQueryText("")
       setMessage("Saved search created.")
+      showToast({ type: "success", title: "Saved search created", message: "Your search was saved successfully." })
       router.refresh()
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to save search")
+      const message = error instanceof Error ? error.message : "Unable to save search"; setMessage(message); showToast({ type: "error", title: "Unable to save search", message })
     } finally {
       setIsSaving(false)
     }
@@ -132,11 +141,11 @@ export function FleetSavedSearchesPage({
       <section className="rounded-lg border border-[#1f2937] bg-[#111827] p-4">
         <h2 className="text-lg font-semibold">Create saved search</h2>
         <form onSubmit={saveSearch} className="mt-4 grid gap-3 md:grid-cols-[1fr_180px_1fr_auto]">
-          <input className="h-10 rounded-sm border border-[#334155] bg-[#0b1220] px-3" placeholder="Name" value={name} onChange={(event) => setName(event.target.value)} required />
+          <label className="grid gap-1"><span className="text-xs text-[#9CA3AF]">Name *</span><input className="h-10 rounded-sm border border-[#334155] bg-[#0b1220] px-3" placeholder="Name" value={name} onChange={(event) => setName(event.target.value)} maxLength={100} required /></label>
           <select className="h-10 rounded-sm border border-[#334155] bg-[#0b1220] px-3" value={scope} onChange={(event) => setScope(event.target.value as typeof scope)}>
             {scopeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
-          <input className="h-10 rounded-sm border border-[#334155] bg-[#0b1220] px-3" placeholder="Search text or filter keyword" value={queryText} onChange={(event) => setQueryText(event.target.value)} />
+          <label className="grid gap-1"><span className="text-xs text-[#9CA3AF]">Search text</span><input className="h-10 rounded-sm border border-[#334155] bg-[#0b1220] px-3" placeholder="Search text or filter keyword" value={queryText} onChange={(event) => setQueryText(event.target.value)} maxLength={200} /></label>
           <Button type="submit" disabled={isSaving || !canSave}>{isSaving ? "Saving..." : "Save"}</Button>
         </form>
         {!canSave ? <p className="mt-3 text-sm text-amber-200">{access?.actions?.["saved-searches.create"]?.reason ?? "Upgrade your plan to save searches."}</p> : null}

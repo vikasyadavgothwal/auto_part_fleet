@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -61,7 +62,7 @@ const quoteWindowMessage = (rfq: FleetRfq) => {
   const endsAt = rfq.quoteWindowEndsAt
     ? new Date(rfq.quoteWindowEndsAt).toLocaleString("en-AE")
     : "the quote window closes"
-  return `Suppliers are quoting. Top five quotes will be shown after ${endsAt}.`
+  return `Suppliers are quoting. Top six quotes will be shown after ${endsAt}.`
 }
 
 const addressOptionLabel = (address: FleetAddressRecord) =>
@@ -93,6 +94,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
   const [selectedAddressId, setSelectedAddressId] = React.useState("")
   const [isLoadingAddresses, setIsLoadingAddresses] = React.useState(false)
   const [error, setError] = React.useState("")
+  const [createdOrderId, setCreatedOrderId] = React.useState<string | null>(null)
   const selected = rfqs.find((rfq) => rfq.id === selectedId) ?? null
   const confirmBid = selected?.bids.find((bid) => bid.id === confirmBidId) ?? null
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null
@@ -180,8 +182,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
       const payload = await response.json() as { ok: boolean; order?: NonNullable<FleetRfq["order"]>; message?: string }
       if (!response.ok || !payload.ok || !payload.order) throw new Error(payload.message || "Unable to accept quote")
       onAccepted(selected.id, bidId, payload.order)
-      window.alert("Payment Successful")
-      window.alert("Your order has been created successfully.")
+      setCreatedOrderId(payload.order.publicId)
       setConfirmBidId(null)
       setSelectedAddressId("")
     } catch (caught) {
@@ -323,7 +324,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
               {quoteWindowMessage(selected) ? <p className="mb-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-3 text-sm text-[#9CA3AF]">{quoteWindowMessage(selected)}</p> : null}
               <div className="overflow-x-auto rounded-lg border border-[#2A2A2A]">
                 <table className="w-full min-w-[760px] text-sm">
-                  <thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th rowSpan={2} className="p-3 text-left">VIN</th><th rowSpan={2} className="p-3 text-left">Part</th><th rowSpan={2} className="p-3 text-left">Number</th><th rowSpan={2} className="p-3 text-left">Qty</th><th rowSpan={2} className="p-3 text-left">Target</th>{selected.bids.map((bid, index) => { const name = bid.supplier.companyName || [bid.supplier.firstName, bid.supplier.lastName].filter(Boolean).join(" ") || bid.supplier.email || "Supplier"; return <th key={bid.id} colSpan={4} className="border-l border-[#2A2A2A] p-3 text-left"><div className="flex min-w-[410px] items-center justify-between gap-3"><div><p className="font-semibold text-white">Vendor {index + 1}</p><p className="text-xs font-normal">{name} · {money(bid.totalAmount)} · up to {bid.deliveryDays} days</p></div>{selected.status === "open" && bid.status === "submitted" ? <Button size="sm" disabled={Boolean(accepting)} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : <span className="text-xs capitalize">{bid.status}</span>}</div></th> })}</tr><tr>{selected.bids.map((bid) => <React.Fragment key={bid.id}><th className="border-l border-t border-[#2A2A2A] p-2 text-left">Condition</th><th className="border-t border-[#2A2A2A] p-2 text-left">Delivery</th><th className="border-t border-[#2A2A2A] p-2 text-right">Unit Price</th><th className="border-t border-[#2A2A2A] p-2 text-right">Line Total</th></React.Fragment>)}</tr></thead>
+                  <thead className="bg-[#0A0A0A] text-[#9CA3AF]"><tr><th rowSpan={2} className="p-3 text-left">VIN</th><th rowSpan={2} className="p-3 text-left">Part</th><th rowSpan={2} className="p-3 text-left">Number</th><th rowSpan={2} className="p-3 text-left">Qty</th><th rowSpan={2} className="p-3 text-left">Target</th>{selected.bids.map((bid, index) => { const name = bid.supplier.companyName || [bid.supplier.firstName, bid.supplier.lastName].filter(Boolean).join(" ") || bid.supplier.email || "Supplier"; return <th key={bid.id} colSpan={4} className="border-l border-[#2A2A2A] p-3 text-left"><div className="flex min-w-[410px] items-center justify-between gap-3"><div><div className="mb-1 flex items-center gap-2"><p className="font-semibold text-white">Vendor {index + 1}</p>{bid.featuredSupplier ? <Badge className="rounded-full bg-[#DC2626] px-2 py-0.5 text-[11px] text-white">Featured supplier</Badge> : null}</div><p className="text-xs font-normal">{name} · {money(bid.totalAmount)} · up to {bid.deliveryDays} days</p></div>{selected.status === "open" && bid.status === "submitted" ? <Button size="sm" disabled={Boolean(accepting)} onClick={() => openConfirmBid(bid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Accept Bid</Button> : <span className="text-xs capitalize">{bid.status}</span>}</div></th> })}</tr><tr>{selected.bids.map((bid) => <React.Fragment key={bid.id}><th className="border-l border-t border-[#2A2A2A] p-2 text-left">Condition</th><th className="border-t border-[#2A2A2A] p-2 text-left">Delivery</th><th className="border-t border-[#2A2A2A] p-2 text-right">Unit Price</th><th className="border-t border-[#2A2A2A] p-2 text-right">Line Total</th></React.Fragment>)}</tr></thead>
                   <tbody>{selected.parts.map((part) => <tr key={part.id} className="border-t border-[#2A2A2A]"><td className="p-3 font-mono text-xs">{part.vehicleVin || selected.vehicleVin || "-"}</td><td className="p-3 font-medium text-white">{part.partName}</td><td className="p-3">{part.partNumber || "-"}</td><td className="p-3">{part.quantity}</td><td className="p-3">{part.targetPrice === null ? "-" : money(part.targetPrice)}</td>{selected.bids.map((bid) => { const item = bid.items.find((entry) => entry.rfqPartId === part.id); return <React.Fragment key={bid.id}><td className="border-l border-[#2A2A2A] p-3">{item?.partType || "Pending"}</td><td className="p-3">{item ? deliveryOptionLabel(item.deliveryOption) : "-"}</td><td className="p-3 text-right">{item ? money(item.unitPrice) : "-"}</td><td className="p-3 text-right font-medium text-white">{item ? money(item.lineTotal) : "-"}</td></React.Fragment> })}</tr>)}</tbody>
                 </table>
               </div>
@@ -358,6 +359,18 @@ export function RfqsTable({ rfqs, onAccepted }: {
         <DialogFooter>
           <Button variant="outline" disabled={Boolean(accepting)} onClick={() => setConfirmBidId(null)}>Cancel</Button>
           <Button disabled={!confirmBid || Boolean(accepting) || !selectedAddressId} onClick={() => confirmBid && void acceptBid(confirmBid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">{accepting ? "Creating order..." : "Accept Bid & Create Order"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    <Dialog open={Boolean(createdOrderId)} onOpenChange={(open) => { if (!open) setCreatedOrderId(null) }}>
+      <DialogContent className="border-[#2A2A2A] bg-[#151515] text-white sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Payment successful</DialogTitle>
+          <DialogDescription>Your order has been created successfully.</DialogDescription>
+        </DialogHeader>
+        {createdOrderId ? <p className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4 text-sm">Order: <span className="font-semibold text-green-400">{createdOrderId}</span></p> : null}
+        <DialogFooter>
+          <Button type="button" onClick={() => setCreatedOrderId(null)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">Done</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

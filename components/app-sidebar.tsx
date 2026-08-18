@@ -50,16 +50,18 @@ const fallbackMenuKeysWithoutApiAccess = fallbackMenuKeys.filter((menuKey) => me
 export function AppSidebar({
   visibleMenus = [],
   planName,
+  planCode,
   isOwner = false,
 }: {
   visibleMenus?: string[]
   planName?: string | null
+  planCode?: string | null
   isOwner?: boolean
 }) {
   const currentPath = stripBasePath(usePathname())
   const effectiveVisibleMenus = visibleMenus.length ? visibleMenus : isOwner || !planName ? fallbackMenuKeysWithoutApiAccess : []
   const visibleMenuSet = new Set(["settings", ...(isOwner ? ["overview", "plans", "add-ons"] : []), ...effectiveVisibleMenus])
-  if (/\bfree\b/i.test(planName ?? "")) visibleMenuSet.delete("api-keys")
+  if (planCode === "Enterprise" || /\benterprise\b/i.test(planName ?? "")) visibleMenuSet.delete("add-ons")
 
   return (
     <Sidebar className="border-sidebar-border bg-[#1A1A1A] text-white">

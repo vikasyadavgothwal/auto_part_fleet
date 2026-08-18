@@ -125,6 +125,8 @@ export function AddPartsStep({
                     type="text"
                     placeholder="e.g., Brake Pads"
                     value={part.partName}
+                    maxLength={120}
+                    required
                     onChange={(e) =>
                       onUpdatePart(part.id, "partName", e.target.value)
                     }
@@ -140,6 +142,7 @@ export function AddPartsStep({
                     type="text"
                     placeholder="e.g., BC1259"
                     value={part.partNumber}
+                    maxLength={80}
                     onChange={(e) =>
                       onUpdatePart(part.id, "partNumber", e.target.value)
                     }
@@ -157,6 +160,9 @@ export function AddPartsStep({
                     pattern="[0-9]*"
                     min={1}
                     value={part.quantity}
+                    maxLength={3}
+                    max={999}
+                    required
                     onChange={(e) => {
                       const nextValue = digitsOnly(e.target.value)
                       onUpdatePart(part.id, "quantity", Number(nextValue) || 1)
@@ -174,6 +180,7 @@ export function AddPartsStep({
                     inputMode="decimal"
                     placeholder="e.g., 125"
                     value={part.targetPrice}
+                    maxLength={9}
                     onChange={(e) =>
                       onUpdatePart(part.id, "targetPrice", decimalOnly(e.target.value))
                     }
@@ -189,6 +196,7 @@ export function AddPartsStep({
                     type="text"
                     placeholder="Any specific requirements..."
                     value={part.notes}
+                    maxLength={500}
                     onChange={(e) =>
                       onUpdatePart(part.id, "notes", e.target.value)
                     }

@@ -289,6 +289,15 @@ export function FleetRolesPage({
       showToast({ type: "error", title: "Error", message: unableMessage })
       return
     }
+    const normalizedName = name.trim()
+    const normalizedDescription = description.trim()
+    if (!normalizedName) {
+      const error = "Role name is required."; setMessage(error); showToast({ type: "error", title: "Check role", message: error }); return
+    }
+    if (normalizedName.length > 100 || normalizedDescription.length > 500) {
+      const error = "Role name must be 100 characters or fewer and description 500 characters or fewer."; setMessage(error); showToast({ type: "error", title: "Check role", message: error }); return
+    }
+    setName(normalizedName); setDescription(normalizedDescription)
     if (editingRole) {
       await updateRole()
     } else {
@@ -383,11 +392,12 @@ export function FleetRolesPage({
           </DialogHeader>
           <form onSubmit={submitRole} className="mt-4 space-y-4">
             <div className="grid gap-3">
-              <Label htmlFor="fleet-role-name">Role name</Label>
+              <Label htmlFor="fleet-role-name">Role name *</Label>
               <Input
                 id="fleet-role-name"
                 type="text"
                 required
+                maxLength={100}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 className="bg-[#0b1220] border-[#334155]"
@@ -399,6 +409,7 @@ export function FleetRolesPage({
               <textarea
                 id="fleet-role-description"
                 value={description}
+                maxLength={500}
                 onChange={(event) => setDescription(event.target.value)}
                 className="min-h-16 w-full rounded-md border border-[#334155] bg-[#0b1220] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]"
                 placeholder="Role purpose"

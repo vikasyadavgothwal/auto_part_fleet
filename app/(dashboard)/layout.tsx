@@ -38,6 +38,7 @@ async function getBusinessAccess() {
   return {
     visibleMenus: (access?.visibleMenus ?? []).filter((menu) => menu !== "api-keys" || hasPlanApiAccess || hasApiAddOn),
     planName: access?.businessAccount.plan.name ?? null,
+    planCode: access?.businessAccount.plan.code ?? null,
     isOwner: access?.businessAccount.isOwner ?? false,
   }
 }
@@ -52,7 +53,7 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <ToastProvider>
         <SessionKeepalive />
-        <AppSidebar visibleMenus={businessAccess.visibleMenus} planName={businessAccess.planName} isOwner={businessAccess.isOwner} />
+        <AppSidebar visibleMenus={businessAccess.visibleMenus} planName={businessAccess.planName} planCode={businessAccess.planCode} isOwner={businessAccess.isOwner} />
         <SidebarInset className="min-h-svh bg-[#0A0A0A]">
           <DashboardHeader user={user} />
           <div className="flex flex-1 flex-col p-4 lg:p-6">
