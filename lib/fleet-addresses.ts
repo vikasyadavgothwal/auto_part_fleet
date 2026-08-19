@@ -8,7 +8,6 @@ export type FleetAddressRecord = {
   landmark: string | null
   city: string
   state: string
-  postalCode: string
   country: string
   isDefault: boolean
   createdAt: string
@@ -24,7 +23,6 @@ export type FleetAddressFormValues = {
   landmark: string
   city: string
   state: string
-  postalCode: string
   country: string
   isDefault: boolean
 }
@@ -38,7 +36,6 @@ export const emptyAddressForm: FleetAddressFormValues = {
   landmark: "",
   city: "",
   state: "",
-  postalCode: "",
   country: "",
   isDefault: true,
 }
@@ -54,7 +51,6 @@ export const formFromAddress = (
   landmark: address.landmark ?? "",
   city: address.city,
   state: address.state,
-  postalCode: address.postalCode,
   country: address.country,
   isDefault: address.isDefault,
 })
@@ -68,7 +64,6 @@ export const payloadFromAddressForm = (form: FleetAddressFormValues) => ({
   landmark: form.landmark.trim(),
   city: form.city.trim(),
   state: form.state.trim(),
-  postalCode: form.postalCode.trim(),
   country: form.country.trim(),
   isDefault: form.isDefault,
 })

@@ -46,9 +46,6 @@ const validateAddressForm = (values: FleetAddressFormValues) => {
   if (values.addressLine1.trim().length > 180 || values.addressLine2.trim().length > 180 || values.landmark.trim().length > 120) return "Address fields exceed their allowed length"
   if (!values.city.trim()) return "City is required"
   if (!values.state.trim()) return "State is required"
-  if (!/^[A-Za-z0-9 -]{3,20}$/.test(values.postalCode.trim())) {
-    return "Enter a valid postal code"
-  }
   if (!values.country.trim()) return "Country is required"
   return ""
 }
@@ -60,7 +57,6 @@ const addressSummary = (address: FleetAddressRecord) =>
     address.landmark,
     address.city,
     address.state,
-    address.postalCode,
     address.country,
   ]
     .filter(Boolean)
@@ -587,17 +583,6 @@ function AddressFields({
           maxLength={25}
           required
           onChange={(event) => onChange("phone", event.target.value)}
-          className={inputClassName}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`${prefix}-postal`}>Postal Code *</Label>
-        <Input
-          id={`${prefix}-postal`}
-          value={values.postalCode}
-          maxLength={20}
-          required
-          onChange={(event) => onChange("postalCode", event.target.value)}
           className={inputClassName}
         />
       </div>

@@ -21,7 +21,6 @@ export type LiveOrder = {
   deliveryLandmark: string | null
   deliveryCity: string | null
   deliveryState: string | null
-  deliveryPostalCode: string | null
   deliveryCountry: string | null
   buyer: { id: string; companyName: string | null; firstName: string | null; lastName: string | null; email: string | null; activeRole: string }
   supplier: { id: string; supplierPublicId?: string | null; companyName: string | null; firstName: string | null; lastName: string | null; email: string | null }

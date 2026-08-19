@@ -43,7 +43,6 @@ type FleetSettingsManagerProps = {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MOBILE_PATTERN = /^\+\d{8,18}$/
-const POSTAL_CODE_PATTERN = /^[A-Za-z0-9 -]*$/
 const MOBILE_COUNTRY_CODES = [
   { code: "+971", label: "UAE" },
   { code: "+91", label: "India" },
@@ -216,9 +215,6 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
     }
     if (form.phone && !MOBILE_PATTERN.test(form.phone)) {
       return "Enter a valid mobile number"
-    }
-    if (form.postalCode && !POSTAL_CODE_PATTERN.test(form.postalCode)) {
-      return "Postal code contains invalid characters"
     }
     return ""
   }
@@ -688,17 +684,6 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
               value={form.state}
               maxLength={80}
               onChange={(event) => setField("state", event.target.value)}
-              className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="postal-code">Postal Code</Label>
-            <Input
-              id="postal-code"
-              value={form.postalCode}
-              maxLength={20}
-              onChange={(event) => setField("postalCode", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
           </div>

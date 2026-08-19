@@ -36,7 +36,6 @@ const deliveryAddress = (order: LiveOrder) =>
     order.deliveryLandmark,
     order.deliveryCity,
     order.deliveryState,
-    order.deliveryPostalCode,
     order.deliveryCountry,
   ]
     .filter(Boolean)

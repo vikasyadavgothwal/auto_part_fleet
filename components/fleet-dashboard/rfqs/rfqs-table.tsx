@@ -66,7 +66,7 @@ const quoteWindowMessage = (rfq: FleetRfq) => {
 }
 
 const addressOptionLabel = (address: FleetAddressRecord) =>
-  `${address.label}${address.isDefault ? " (Default)" : ""} - ${address.city}, ${address.postalCode}`
+  `${address.label}${address.isDefault ? " (Default)" : ""} - ${address.city}`
 
 const addressSummary = (address: FleetAddressRecord) =>
   [
@@ -77,7 +77,6 @@ const addressSummary = (address: FleetAddressRecord) =>
     address.landmark,
     address.city,
     address.state,
-    address.postalCode,
     address.country,
   ]
     .filter(Boolean)
