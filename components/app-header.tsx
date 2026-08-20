@@ -5,6 +5,15 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -21,6 +30,7 @@ import { mainWebsiteUrl } from "@/lib/main-website-url"
 export function DashboardHeader({ user }: { user: DashboardUser }) {
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false)
   const handleLogout = async () => {
     setIsLoggingOut(true)
     await logoutFleet()
@@ -73,9 +83,25 @@ export function DashboardHeader({ user }: { user: DashboardUser }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button type="button" variant="ghost" className="flex items-center gap-2 rounded-sm bg-brand-panel-strong px-3 py-2"><User className="h-5 w-5 text-brand-muted" /><span className="hidden text-sm font-medium sm:inline">{getDashboardUserName(user)}</span><ChevronDown className="h-4 w-4" /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2">
-              <DropdownMenuItem disabled={isLoggingOut} onSelect={() => void handleLogout()}><LogOut /> {isLoggingOut ? "Signing out..." : "Log out"}</DropdownMenuItem>
+              <DropdownMenuItem disabled={isLoggingOut} onSelect={() => setIsLogoutOpen(true)}><LogOut /> {isLoggingOut ? "Signing out..." : "Log out"}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Dialog open={isLogoutOpen} onOpenChange={setIsLogoutOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Log out?</DialogTitle>
+                <DialogDescription>Are you sure you want to log out of this dashboard?</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" disabled={isLoggingOut}>Cancel</Button>
+                </DialogClose>
+                <Button type="button" variant="destructive" disabled={isLoggingOut} onClick={() => void handleLogout()}>
+                  {isLoggingOut ? "Signing out..." : "Log out"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Button
             type="button"
             variant="ghost"
