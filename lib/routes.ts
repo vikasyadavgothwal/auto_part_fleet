@@ -30,6 +30,7 @@ export const appRoutes = {
   integrations: "/integrations",
   apiKeys: "/api-keys",
   addOns: "/add-ons",
+  payments: "/payments",
   support: "/support",
   reports: "/reports",
   plans: "/plans",
