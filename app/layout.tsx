@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/components/language/language-provider";
 import { ToastProvider } from "@/components/ui/toast-provider";
 
 const geistSans = Geist({
@@ -18,17 +20,28 @@ export const metadata: Metadata = {
   description: "The best way to manage your fleet",
 };  
 
-export default function RootLayout({
+const isDashboardLanguage = (value: unknown): value is "en" | "ar" =>
+  value === "en" || value === "ar";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const languageCookie = (await cookies()).get("app_lang")?.value;
+  const language = isDashboardLanguage(languageCookie) ? languageCookie : "en";
+
   return (
     <html
-      lang="en"
+      lang={language}
+      dir={language === "ar" ? "rtl" : "ltr"}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col"><ToastProvider>{children}</ToastProvider></body>
+      <body className="min-h-full flex flex-col">
+        <LanguageProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </LanguageProvider>
+      </body>
     </html>
   );
 }
