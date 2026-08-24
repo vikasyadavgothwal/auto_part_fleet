@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/components/language/language-provider";
 import { ToastProvider } from "@/components/ui/toast-provider";
+import { getSiteBranding } from "@/lib/site-branding";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,10 +16,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Fleet ",
-  description: "The best way to manage your fleet",
-};  
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getSiteBranding();
+  return {
+    title: "Fleet ",
+    description: "The best way to manage your fleet",
+    icons: { icon: branding.faviconUrl || "/favicon.ico" },
+  };
+}
 
 const isDashboardLanguage = (value: unknown): value is "en" | "ar" =>
   value === "en" || value === "ar";
