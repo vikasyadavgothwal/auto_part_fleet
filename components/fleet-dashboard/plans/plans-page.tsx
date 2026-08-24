@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BillingPrice } from "@/components/fleet-dashboard/plans/billing-price"
 import { ChangePlanButton } from "@/components/fleet-dashboard/plans/change-plan-button"
 import { PaymentHistoryTable } from "@/components/fleet-dashboard/plans/payment-history-table"
+import { PlanReturnToast } from "@/components/fleet-dashboard/plans/plan-return-toast"
 import { requestBackend } from "@/lib/auth/backend"
 import type { PaymentReturnStatus } from "@/lib/payments.server"
 
@@ -89,6 +90,7 @@ export async function PlansPage({ paymentStatus = "none" }: { paymentStatus?: Pa
   const returnMessage = paymentMessage(paymentStatus)
 
   return <div className="space-y-6">
+    {paymentStatus === "success" && returnMessage ? <PlanReturnToast title={returnMessage.title} body={returnMessage.body} /> : null}
     {returnMessage ? <Card className={returnMessage.className}><CardContent className="pt-6"><p className="font-semibold">{returnMessage.title}</p><p className="mt-1 text-sm">{returnMessage.body}</p></CardContent></Card> : null}
     {currentPlan ? <section className="rounded-lg border border-border bg-card p-5 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-sm text-muted-foreground">Current plan</p><h2 className="mt-2 text-2xl font-semibold">{currentPlan.name}</h2><p className="mt-1 text-sm text-muted-foreground">{currentPlan.description}</p></div>{currentPlan.code !== "Free" ? <div className="text-left sm:text-right"><BillingPrice code={currentPlan.code} currency={currentPlan.price.currency} monthlyAmount={currentPlan.price.amount} yearlyAmount={currentPlan.price.yearlyAmount} /><p className="mt-1 text-xs text-emerald-500">Active subscription</p></div> : null}</div>{reachedLimits.length ? <p className="mt-3 rounded border border-amber-500/30 bg-amber-500/10 p-2 text-sm text-amber-200">Usage has reached plan limits for: {reachedLimits.map((item) => item.label).join(", ")}. Ask admin for a higher plan.</p> : null}</section> : null}
     {scheduledChange ? <Card className="border-amber-500/30 bg-amber-500/10"><CardContent className="pt-6"><p className="font-semibold text-amber-600">Downgrade scheduled</p><p className="mt-1 text-sm text-muted-foreground">Your current plan remains active until {formatDate(scheduledChange.effectiveAt)}. {scheduledChange.toPlanName ?? "The smaller plan"} activates automatically after that.</p></CardContent></Card> : null}

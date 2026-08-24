@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/toast-provider"
+import { appPath } from "@/lib/routes"
 
 export function ChangePlanButton({
   businessAccountId,
@@ -29,7 +30,7 @@ export function ChangePlanButton({
 
   const changePlan = async () => {
     setSaving(true)
-    const response = await fetch("/api/plans/change", {
+    const response = await fetch(appPath("/api/plans/change"), {
       method: "PATCH",
       headers: {
         "content-type": "application/json",
@@ -38,8 +39,8 @@ export function ChangePlanButton({
       body: JSON.stringify({
         businessAccountId,
         planId,
-        paymentSuccessUrl: `${window.location.origin}/plans?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-        paymentCancelUrl: `${window.location.origin}/plans?payment=cancelled`,
+        paymentSuccessUrl: `${window.location.origin}${appPath("/plans")}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        paymentCancelUrl: `${window.location.origin}${appPath("/plans")}?payment=cancelled`,
       }),
     })
     const result = (await response.json().catch(() => null)) as {
