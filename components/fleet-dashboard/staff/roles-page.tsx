@@ -321,7 +321,7 @@ export function FleetRolesPage({
         <p className="mt-2 text-xs text-muted-foreground">Role limit: {limitText}</p>
       </div>
 
-      <section className="rounded-lg border border-[#1f2937] bg-[#111827] p-4 text-white">
+      <section className="rounded-lg border border-border bg-card p-4 text-card-foreground">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Existing roles</h2>
           <Button type="button" onClick={openCreateDialog} disabled={!canMutateRoles}>
@@ -332,7 +332,7 @@ export function FleetRolesPage({
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="Search roles"
-          className="mt-4 max-w-sm bg-[#0b1220] border-[#334155] text-white"
+          className="mt-4 max-w-sm"
         />
         <Table className="mt-4">
           <TableHeader>
@@ -347,7 +347,7 @@ export function FleetRolesPage({
           <TableBody>
             {filteredRoles.length ? (
               filteredRoles.map((role) => (
-                <TableRow key={role.id} className="border-[#1f2937]">
+                <TableRow key={role.id}>
                   <TableCell>{role.name}</TableCell>
                   <TableCell>{toDisplayName(role.description)}</TableCell>
                   <TableCell>{permissionNames(role.permissionIds, permissions) || "None"}</TableCell>
@@ -381,7 +381,7 @@ export function FleetRolesPage({
       </section>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-xl bg-[#111827] border-[#1f2937] text-white">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{editingRole ? "Edit role" : "Create role"}</DialogTitle>
             <DialogDescription>
@@ -400,7 +400,6 @@ export function FleetRolesPage({
                 maxLength={100}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="bg-[#0b1220] border-[#334155]"
                 placeholder="Fleet coordinator"
               />
             </div>
@@ -411,19 +410,19 @@ export function FleetRolesPage({
                 value={description}
                 maxLength={500}
                 onChange={(event) => setDescription(event.target.value)}
-                className="min-h-16 w-full rounded-md border border-[#334155] bg-[#0b1220] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]"
+                className="min-h-16 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 placeholder="Role purpose"
               />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm text-white">Permissions</Label>
-                <span className="text-xs text-[#9CA3AF]">{selectedPermissionIds.length} selected</span>
+                <Label className="text-sm">Permissions</Label>
+                <span className="text-xs text-muted-foreground">{selectedPermissionIds.length} selected</span>
               </div>
-              {permissions.length ? <div className="overflow-hidden rounded-md border border-[#334155] bg-[#0b1220]">
-                <div className="border-b border-[#334155] p-3"><div className="flex flex-wrap gap-2">{selectedPermissionEntries(selectedPermissionIds, permissions).map((permission) => <button key={permission.id} type="button" onClick={() => togglePermission(permission.id)} className="inline-flex items-center gap-1 rounded-full border border-blue-400/30 bg-blue-400/10 px-2.5 py-1 text-xs text-blue-200 transition hover:bg-blue-400/20" aria-label={`Remove ${permission.name}`}>{permission.name}<X className="size-3.5" /></button>)}{!selectedPermissionIds.length ? <p className="text-xs text-[#9CA3AF]">No permissions selected yet. Choose the access this role should have.</p> : null}</div></div>
-                <div className="space-y-3 p-3"><div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9CA3AF]" /><Input value={permissionQuery} onChange={(event) => setPermissionQuery(event.target.value)} placeholder="Search permissions by name or code" className="h-10 border-[#334155] bg-[#111827] pl-9 text-white" /></div><div className="flex items-center justify-between gap-3 text-xs text-[#9CA3AF]"><span>{filteredPermissions.length} permission{filteredPermissions.length === 1 ? "" : "s"} shown</span><div className="flex gap-1"><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs text-blue-200 hover:bg-blue-400/10 hover:text-blue-100" onClick={() => setSelectedPermissionIds((current) => Array.from(new Set([...current, ...filteredPermissions.map((permission) => permission.id)])))}>Select shown</Button><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs text-[#9CA3AF] hover:bg-[#1f2937] hover:text-white" onClick={() => setSelectedPermissionIds([])}>Clear</Button></div></div><div className="grid max-h-64 gap-2 overflow-y-auto pr-1">{filteredPermissions.length ? filteredPermissions.map((permission) => { const selected = selectedPermissionIds.includes(permission.id); return <button key={permission.id} type="button" aria-pressed={selected} onClick={() => togglePermission(permission.id)} className={`flex items-start gap-3 rounded-md border p-3 text-left transition ${selected ? "border-blue-400/40 bg-blue-400/10" : "border-[#334155] bg-[#111827] hover:border-blue-400/30 hover:bg-[#172033]"}`}><span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border ${selected ? "border-blue-400 bg-blue-500 text-white" : "border-[#64748b]"}`}>{selected ? <Check className="size-3.5" /> : null}</span><span className="min-w-0"><span className="block text-sm font-medium text-white">{permission.name}</span><span className="block truncate text-xs text-[#9CA3AF]">{permission.code}{permission.description ? ` - ${permission.description}` : ""}</span></span></button> }) : <p className="px-3 py-6 text-center text-sm text-[#9CA3AF]">No permissions found.</p>}</div></div>
-              </div> : <p className="text-sm text-[#9CA3AF]">No permissions available.</p>}
+              {permissions.length ? <div className="overflow-hidden rounded-md border border-border bg-background">
+                <div className="border-b border-border p-3"><div className="flex flex-wrap gap-2">{selectedPermissionEntries(selectedPermissionIds, permissions).map((permission) => <button key={permission.id} type="button" onClick={() => togglePermission(permission.id)} className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs text-primary transition hover:bg-primary/20" aria-label={`Remove ${permission.name}`}>{permission.name}<X className="size-3.5" /></button>)}{!selectedPermissionIds.length ? <p className="text-xs text-muted-foreground">No permissions selected yet. Choose the access this role should have.</p> : null}</div></div>
+                <div className="space-y-3 p-3"><div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={permissionQuery} onChange={(event) => setPermissionQuery(event.target.value)} placeholder="Search permissions by name or code" className="h-10 pl-9" /></div><div className="flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>{filteredPermissions.length} permission{filteredPermissions.length === 1 ? "" : "s"} shown</span><div className="flex gap-1"><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedPermissionIds((current) => Array.from(new Set([...current, ...filteredPermissions.map((permission) => permission.id)])))}>Select shown</Button><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedPermissionIds([])}>Clear</Button></div></div><div className="grid max-h-64 gap-2 overflow-y-auto pr-1">{filteredPermissions.length ? filteredPermissions.map((permission) => { const selected = selectedPermissionIds.includes(permission.id); return <button key={permission.id} type="button" aria-pressed={selected} onClick={() => togglePermission(permission.id)} className={`flex items-start gap-3 rounded-md border p-3 text-left transition ${selected ? "border-primary/40 bg-primary/10" : "border-border bg-card hover:border-primary/30 hover:bg-muted/50"}`}><span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border ${selected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40"}`}>{selected ? <Check className="size-3.5" /> : null}</span><span className="min-w-0"><span className="block text-sm font-medium text-foreground">{permission.name}</span><span className="block truncate text-xs text-muted-foreground">{permission.code}{permission.description ? ` - ${permission.description}` : ""}</span></span></button> }) : <p className="px-3 py-6 text-center text-sm text-muted-foreground">No permissions found.</p>}</div></div>
+              </div> : <p className="text-sm text-muted-foreground">No permissions available.</p>}
             </div>
 
             {message ? <p className="text-sm text-red-300">{message}</p> : null}
@@ -440,7 +439,7 @@ export function FleetRolesPage({
       </Dialog>
 
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="max-w-sm bg-[#111827] border-[#1f2937] text-white">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Delete role</DialogTitle>
             <DialogDescription>
