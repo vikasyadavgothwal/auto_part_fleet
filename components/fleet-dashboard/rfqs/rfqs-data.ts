@@ -65,6 +65,7 @@ export type FleetRfq = {
     bidId: string
     totalAmount: number
     status: string
+    paymentStatus: "pending" | "succeeded" | "failed" | "refunded"
   } | null
 }
 

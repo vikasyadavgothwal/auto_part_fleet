@@ -60,6 +60,20 @@ const DEFAULT_MOBILE_COUNTRY_CODE = "+971"
 const normalizeDigits = (value: string, maxLength = 14) =>
   value.replace(/\D/g, "").slice(0, maxLength)
 
+const allowDigitsOnlyKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  if (
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey ||
+    event.key.length > 1
+  ) {
+    return
+  }
+  if (!/\d/.test(event.key)) event.preventDefault()
+}
+
+const RequiredAsterisk = () => <span className="text-red-500">*</span>
+
 const parseMobileNumber = (value: string) => {
   const compact = value.replace(/[^\d+]/g, "")
   const countryCode =
@@ -207,12 +221,14 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
     if (form.companyName.trim().length > 160) {
       return "Company name must be 160 characters or fewer"
     }
+    if (!form.email.trim()) return "Email is required"
     if (form.firstName.trim().length > 100 || form.lastName.trim().length > 100) {
       return "Name fields must be 100 characters or fewer"
     }
     if (form.email && !EMAIL_PATTERN.test(form.email)) {
       return "Enter a valid email address"
     }
+    if (!form.phone.trim()) return "Mobile number is required"
     if (form.phone && !MOBILE_PATTERN.test(form.phone)) {
       return "Enter a valid mobile number"
     }
@@ -482,7 +498,9 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="fleet-email">Email</Label>
+              <Label htmlFor="fleet-email">
+                Email <RequiredAsterisk />
+              </Label>
               {emailVerified ? (
                 <Badge className="bg-green-500/10 text-green-400">
                   Verified
@@ -496,9 +514,11 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
             <Input
               id="fleet-email"
               type="email"
-              maxLength={180}
-              value={form.email}
-              onChange={(event) => setField("email", event.target.value)}
+                maxLength={180}
+                required
+                value={form.email}
+                placeholder="fleet@company.com"
+                onChange={(event) => setField("email", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
             {!emailVerified ? (
@@ -517,7 +537,9 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="fleet-mobile">Mobile</Label>
+              <Label htmlFor="fleet-mobile">
+                Mobile <RequiredAsterisk />
+              </Label>
               {mobileVerified ? (
                 <Badge className="bg-green-500/10 text-green-400">
                   Verified
@@ -553,6 +575,15 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
                 onChange={(event) =>
                   setMobileNumber(mobileCountryCode, event.target.value)
                 }
+                onKeyDown={allowDigitsOnlyKey}
+                onPaste={(event) => {
+                  event.preventDefault()
+                  setMobileNumber(
+                    mobileCountryCode,
+                    event.clipboardData.getData("text"),
+                  )
+                }}
+                required
                 inputMode="numeric"
                 maxLength={14}
                 autoComplete="tel-national"
@@ -577,6 +608,11 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
                   onChange={(event) =>
                     setOtp(normalizeDigits(event.target.value, 6))
                   }
+                  onKeyDown={allowDigitsOnlyKey}
+                  onPaste={(event) => {
+                    event.preventDefault()
+                    setOtp(normalizeDigits(event.clipboardData.getData("text"), 6))
+                  }}
                   placeholder="Enter 6-digit OTP"
                   inputMode="numeric"
                   autoComplete="one-time-code"
@@ -605,11 +641,15 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-              <Label htmlFor="company-name">Company Name *</Label>
+              <Label htmlFor="company-name">
+                Company Name <RequiredAsterisk />
+              </Label>
             <Input
               id="company-name"
               value={form.companyName}
               maxLength={160}
+              required
+              placeholder="Enter company name"
               onChange={(event) => setField("companyName", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -621,6 +661,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
               id="first-name"
               value={form.firstName}
               maxLength={100}
+              placeholder="Enter first name"
               onChange={(event) => setField("firstName", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -632,6 +673,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
               id="last-name"
               value={form.lastName}
               maxLength={100}
+              placeholder="Enter last name"
               onChange={(event) => setField("lastName", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -650,6 +692,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
               id="address-line-1"
               value={form.addressLine1}
               maxLength={180}
+              placeholder="Street address, building, warehouse"
               onChange={(event) => setField("addressLine1", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -661,6 +704,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
               id="address-line-2"
               value={form.addressLine2}
               maxLength={180}
+              placeholder="Apartment, suite, floor"
               onChange={(event) => setField("addressLine2", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -672,6 +716,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
               id="city"
               value={form.city}
               maxLength={80}
+              placeholder="Enter city"
               onChange={(event) => setField("city", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -683,6 +728,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
               id="state"
               value={form.state}
               maxLength={80}
+              placeholder="Enter state or emirate"
               onChange={(event) => setField("state", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />
@@ -694,6 +740,7 @@ export function FleetSettingsManager({ profile }: FleetSettingsManagerProps) {
               id="country"
               value={form.country}
               maxLength={80}
+              placeholder="Enter country"
               onChange={(event) => setField("country", event.target.value)}
               className="h-11 border-[#2A2A2A] bg-[#0A0A0A]"
             />

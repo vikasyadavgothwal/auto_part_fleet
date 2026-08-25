@@ -11,6 +11,8 @@ import { useToast } from "@/components/ui/toast-provider"
 import { authenticatedFetch } from "@/lib/auth/client"
 import { appPath } from "@/lib/routes"
 
+const RequiredAsterisk = () => <span className="text-red-500">*</span>
+
 export function ChangePasswordCard() {
   const { showToast } = useToast()
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" })
@@ -54,8 +56,10 @@ export function ChangePasswordCard() {
       <CardContent className="grid gap-6 md:grid-cols-3">
         {(["currentPassword", "newPassword", "confirmPassword"] as const).map((key) => (
           <div key={key} className="space-y-2">
-            <Label htmlFor={`password-${key}`}>{key === "currentPassword" ? "Current Password" : key === "newPassword" ? "New Password" : "Confirm Password"}</Label>
-            <Input id={`password-${key}`} type="password" autoComplete={key === "currentPassword" ? "current-password" : "new-password"} value={form[key]} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))} maxLength={128} className="border-border bg-brand-surface" />
+            <Label htmlFor={`password-${key}`}>
+              {key === "currentPassword" ? "Current Password" : key === "newPassword" ? "New Password" : "Confirm Password"} <RequiredAsterisk />
+            </Label>
+            <Input id={`password-${key}`} type="password" autoComplete={key === "currentPassword" ? "current-password" : "new-password"} value={form[key]} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))} minLength={key === "currentPassword" ? undefined : 8} maxLength={128} required placeholder={key === "currentPassword" ? "Enter current password" : key === "newPassword" ? "Enter new password" : "Confirm new password"} className="border-border bg-brand-surface" />
           </div>
         ))}
         <div className="md:col-span-3"><Button type="button" variant="outline" disabled={isSaving} onClick={submit} className="gap-2"><KeyRound className="size-4" />{isSaving ? "Changing..." : "Change Password"}</Button></div>

@@ -50,6 +50,29 @@ const validateAddressForm = (values: FleetAddressFormValues) => {
   return ""
 }
 
+const RequiredAsterisk = () => <span className="text-red-500">*</span>
+
+const sanitizePhoneInput = (value: string) =>
+  value
+    .replace(/[^\d+]/g, "")
+    .replace(/(?!^)\+/g, "")
+    .slice(0, 25)
+
+const allowPhoneKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  if (
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey ||
+    event.key.length > 1
+  ) {
+    return
+  }
+  if (!/[\d+]/.test(event.key)) event.preventDefault()
+  if (event.key === "+" && event.currentTarget.selectionStart !== 0) {
+    event.preventDefault()
+  }
+}
+
 const addressSummary = (address: FleetAddressRecord) =>
   [
     address.addressLine1,
@@ -554,45 +577,64 @@ function AddressFields({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-label`}>Address Label *</Label>
+        <Label htmlFor={`${prefix}-label`}>
+          Address Label <RequiredAsterisk />
+        </Label>
         <Input
           id={`${prefix}-label`}
           value={values.label}
           maxLength={100}
           required
+          placeholder="Warehouse"
           onChange={(event) => onChange("label", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-recipient`}>Recipient Name *</Label>
+        <Label htmlFor={`${prefix}-recipient`}>
+          Recipient Name <RequiredAsterisk />
+        </Label>
         <Input
           id={`${prefix}-recipient`}
           value={values.recipientName}
           maxLength={120}
           required
+          placeholder="Delivery contact name"
           onChange={(event) => onChange("recipientName", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-phone`}>Phone *</Label>
+        <Label htmlFor={`${prefix}-phone`}>
+          Phone <RequiredAsterisk />
+        </Label>
         <Input
           id={`${prefix}-phone`}
           value={values.phone}
           maxLength={25}
           required
-          onChange={(event) => onChange("phone", event.target.value)}
+          type="tel"
+          inputMode="tel"
+          placeholder="+971501234567"
+          onKeyDown={allowPhoneKey}
+          onPaste={(event) => {
+            event.preventDefault()
+            onChange("phone", sanitizePhoneInput(event.clipboardData.getData("text")))
+          }}
+          onChange={(event) => onChange("phone", sanitizePhoneInput(event.target.value))}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2 md:col-span-2">
-        <Label htmlFor={`${prefix}-line-1`}>Address Line 1 *</Label>
+        <Label htmlFor={`${prefix}-line-1`}>
+          Address Line 1 <RequiredAsterisk />
+        </Label>
         <Input
           id={`${prefix}-line-1`}
           value={values.addressLine1}
           maxLength={180}
           required
+          placeholder="Street address, building, warehouse"
           onChange={(event) => onChange("addressLine1", event.target.value)}
           className={inputClassName}
         />
@@ -603,6 +645,7 @@ function AddressFields({
           id={`${prefix}-line-2`}
           value={values.addressLine2}
           maxLength={180}
+          placeholder="Apartment, suite, floor"
           onChange={(event) => onChange("addressLine2", event.target.value)}
           className={inputClassName}
         />
@@ -613,39 +656,49 @@ function AddressFields({
           id={`${prefix}-landmark`}
           value={values.landmark}
           maxLength={120}
+          placeholder="Nearby landmark"
           onChange={(event) => onChange("landmark", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-city`}>City *</Label>
+        <Label htmlFor={`${prefix}-city`}>
+          City <RequiredAsterisk />
+        </Label>
         <Input
           id={`${prefix}-city`}
           value={values.city}
           maxLength={80}
           required
+          placeholder="Enter city"
           onChange={(event) => onChange("city", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-state`}>State *</Label>
+        <Label htmlFor={`${prefix}-state`}>
+          State <RequiredAsterisk />
+        </Label>
         <Input
           id={`${prefix}-state`}
           value={values.state}
           maxLength={80}
           required
+          placeholder="Enter state or emirate"
           onChange={(event) => onChange("state", event.target.value)}
           className={inputClassName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-country`}>Country *</Label>
+        <Label htmlFor={`${prefix}-country`}>
+          Country <RequiredAsterisk />
+        </Label>
         <Input
           id={`${prefix}-country`}
           value={values.country}
           maxLength={80}
           required
+          placeholder="Enter country"
           onChange={(event) => onChange("country", event.target.value)}
           className={inputClassName}
         />

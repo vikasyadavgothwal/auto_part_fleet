@@ -24,6 +24,7 @@ type AccountResponse = {
 }
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const RequiredAsterisk = () => <span className="text-red-500">*</span>
 
 export function AccountSettingsCard({ initialAccount }: { initialAccount?: Account | null }) {
   const { showToast } = useToast()
@@ -99,16 +100,16 @@ export function AccountSettingsCard({ initialAccount }: { initialAccount?: Accou
       <CardContent>
         <form onSubmit={submit} noValidate className="grid gap-5 md:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="account-first-name">First Name *</Label>
-            <Input id="account-first-name" value={form.firstName} onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))} maxLength={100} className="border-border bg-brand-surface" />
+            <Label htmlFor="account-first-name">First Name <RequiredAsterisk /></Label>
+            <Input id="account-first-name" value={form.firstName} onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))} maxLength={100} placeholder="Enter first name" required className="border-border bg-brand-surface" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="account-last-name">Last Name *</Label>
-            <Input id="account-last-name" value={form.lastName} onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))} maxLength={100} className="border-border bg-brand-surface" />
+            <Label htmlFor="account-last-name">Last Name <RequiredAsterisk /></Label>
+            <Input id="account-last-name" value={form.lastName} onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))} maxLength={100} placeholder="Enter last name" required className="border-border bg-brand-surface" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="account-email">Email *</Label>
-            <Input id="account-email" type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} maxLength={254} className="border-border bg-brand-surface" />
+            <Label htmlFor="account-email">Email <RequiredAsterisk /></Label>
+            <Input id="account-email" type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} maxLength={254} placeholder="name@company.com" required className="border-border bg-brand-surface" />
           </div>
           {error ? <p className="text-sm text-destructive md:col-span-3">{error}</p> : null}
           {message ? <p className="text-sm text-emerald-500 md:col-span-3">{message}</p> : null}

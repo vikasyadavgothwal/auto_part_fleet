@@ -75,7 +75,7 @@ const paymentMessage = (status: PaymentReturnStatus) => {
   if (status === "success") return { title: "Payment successful", body: "Your plan has been upgraded and is active now.", className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" }
   if (status === "cancelled") return { title: "Payment cancelled", body: "Your plan was not changed.", className: "border-amber-500/30 bg-amber-500/10 text-amber-600" }
   if (status === "failed") return { title: "Payment failed", body: "Your plan was not upgraded. Please try again or use another payment method.", className: "border-red-500/30 bg-red-500/10 text-red-600" }
-  if (status === "pending") return { title: "Payment failed", body: "Stripe has not confirmed this payment. Your plan was not upgraded.", className: "border-red-500/30 bg-red-500/10 text-red-600" }
+  if (status === "pending") return { title: "Payment pending", body: "Stripe has not confirmed this payment yet. Your plan will update after confirmation.", className: "border-amber-500/30 bg-amber-500/10 text-amber-600" }
   return null
 }
 

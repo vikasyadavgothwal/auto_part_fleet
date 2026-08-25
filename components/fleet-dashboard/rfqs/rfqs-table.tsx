@@ -163,7 +163,8 @@ export function RfqsTable({ rfqs, onAccepted }: {
 
   const acceptBid = async (bidId: string) => {
     if (!selected) return
-    if (!selectedAddressId) {
+    const isExistingOrderPayment = selected.order?.bidId === bidId
+    if (!isExistingOrderPayment && !selectedAddressId) {
       setError("Select a delivery address before creating an order")
       return
     }
@@ -175,11 +176,27 @@ export function RfqsTable({ rfqs, onAccepted }: {
         {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ addressId: selectedAddressId }),
+          body: JSON.stringify({
+            ...(selectedAddressId ? { addressId: selectedAddressId } : {}),
+            paymentSuccessUrl: `${window.location.origin}${appPath("/payments")}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+            paymentCancelUrl: `${window.location.origin}${appPath("/payments")}?payment=cancelled`,
+          }),
         },
       )
-      const payload = await response.json() as { ok: boolean; order?: NonNullable<FleetRfq["order"]>; message?: string }
+      const payload = await response.json() as {
+        ok: boolean
+        order?: NonNullable<FleetRfq["order"]>
+        payment?: { checkoutUrl?: string | null; stripeConfigured?: boolean } | null
+        message?: string
+      }
       if (!response.ok || !payload.ok || !payload.order) throw new Error(payload.message || "Unable to accept quote")
+      if (payload.payment?.checkoutUrl) {
+        window.location.assign(payload.payment.checkoutUrl)
+        return
+      }
+      if (payload.payment?.stripeConfigured === false) {
+        throw new Error("Payment gateway is not configured. Contact support to complete payment.")
+      }
       onAccepted(selected.id, bidId, payload.order)
       setCreatedOrderId(payload.order.publicId)
       setConfirmBidId(null)
@@ -317,7 +334,23 @@ export function RfqsTable({ rfqs, onAccepted }: {
               {new Set(selected.parts.map((part) => part.vehicleVin).filter(Boolean)).size <= 1 ? <><p><span className="text-[#9CA3AF]">Vehicle:</span> {[selected.vehicleYear, selected.vehicleMake, selected.vehicleModel, selected.vehicleTrim].filter(Boolean).join(" ")}</p><p><span className="text-[#9CA3AF]">VIN:</span> {selected.vehicleVin || "-"}</p></> : null}
               <p><span className="text-[#9CA3AF]">Deadline:</span> {new Date(selected.responseDeadline).toLocaleString("en-AE")}</p>
               {selected.order ? <p><span className="text-[#9CA3AF]">Order:</span> <strong className="text-green-500">{selected.order.publicId}</strong></p> : null}
+              {selected.order ? <p><span className="text-[#9CA3AF]">Payment:</span> <span className={selected.order.paymentStatus === "succeeded" ? "text-green-400" : "text-yellow-400"}>{selected.order.paymentStatus === "succeeded" ? "Paid" : selected.order.paymentStatus}</span></p> : null}
             </div>
+            {selected.order?.paymentStatus === "pending" ? (
+              <div className="flex flex-col gap-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-100 sm:flex-row sm:items-center sm:justify-between">
+                <p>
+                  Order {selected.order.publicId} is created but payment is still pending.
+                </p>
+                <Button
+                  type="button"
+                  disabled={accepting === selected.order.bidId}
+                  onClick={() => void acceptBid(selected.order!.bidId)}
+                  className="bg-[#DC2626] text-white hover:bg-[#B91C1C]"
+                >
+                  {accepting === selected.order.bidId ? "Opening payment..." : "Pay Now"}
+                </Button>
+              </div>
+            ) : null}
             <div>
               <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-semibold">Requested parts</h3><span className="text-sm text-[#9CA3AF]">Supplier quotations ({quoteCountLabel(selected)})</span></div>
               {quoteWindowMessage(selected) ? <p className="mb-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-3 text-sm text-[#9CA3AF]">{quoteWindowMessage(selected)}</p> : null}
@@ -357,15 +390,15 @@ export function RfqsTable({ rfqs, onAccepted }: {
         {error ? <p className="text-sm text-red-400">{error}</p> : null}
         <DialogFooter>
           <Button variant="outline" disabled={Boolean(accepting)} onClick={() => setConfirmBidId(null)}>Cancel</Button>
-          <Button disabled={!confirmBid || Boolean(accepting) || !selectedAddressId} onClick={() => confirmBid && void acceptBid(confirmBid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">{accepting ? "Creating order..." : "Accept Bid & Create Order"}</Button>
+          <Button disabled={!confirmBid || Boolean(accepting) || !selectedAddressId} onClick={() => confirmBid && void acceptBid(confirmBid.id)} className="bg-[#DC2626] text-white hover:bg-[#B91C1C]">{accepting ? "Creating payment..." : "Accept Bid & Pay"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
     <Dialog open={Boolean(createdOrderId)} onOpenChange={(open) => { if (!open) setCreatedOrderId(null) }}>
       <DialogContent className="border-[#2A2A2A] bg-[#151515] text-white sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Payment successful</DialogTitle>
-          <DialogDescription>Your order has been created successfully.</DialogDescription>
+              <DialogTitle>Order created</DialogTitle>
+              <DialogDescription>Your order is waiting for payment.</DialogDescription>
         </DialogHeader>
         {createdOrderId ? <p className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4 text-sm">Order: <span className="font-semibold text-green-400">{createdOrderId}</span></p> : null}
         <DialogFooter>
