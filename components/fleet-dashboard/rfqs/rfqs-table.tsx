@@ -332,7 +332,7 @@ export function RfqsTable({ rfqs, onAccepted }: {
           <div className="space-y-6">
             <div className="grid gap-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4 text-sm md:grid-cols-2">
               {new Set(selected.parts.map((part) => part.vehicleVin).filter(Boolean)).size <= 1 ? <><p><span className="text-[#9CA3AF]">Vehicle:</span> {[selected.vehicleYear, selected.vehicleMake, selected.vehicleModel, selected.vehicleTrim].filter(Boolean).join(" ")}</p><p><span className="text-[#9CA3AF]">VIN:</span> {selected.vehicleVin || "-"}</p></> : null}
-              <p><span className="text-[#9CA3AF]">Deadline:</span> {new Date(selected.responseDeadline).toLocaleString("en-AE")}</p>
+              <p><span className="text-[#9CA3AF]">Deadline:</span> {new Date(selected.responseDeadline).toLocaleDateString("en-AE")}</p>
               {selected.order ? <p><span className="text-[#9CA3AF]">Order:</span> <strong className="text-green-500">{selected.order.publicId}</strong></p> : null}
               {selected.order ? <p><span className="text-[#9CA3AF]">Payment:</span> <span className={selected.order.paymentStatus === "succeeded" ? "text-green-400" : "text-yellow-400"}>{selected.order.paymentStatus === "succeeded" ? "Paid" : selected.order.paymentStatus}</span></p> : null}
             </div>
