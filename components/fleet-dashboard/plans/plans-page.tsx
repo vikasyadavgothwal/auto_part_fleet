@@ -75,7 +75,7 @@ const paymentMessage = (status: PaymentReturnStatus) => {
   if (status === "success") return { title: "Payment successful", body: "Your plan has been upgraded and is active now.", className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" }
   if (status === "cancelled") return { title: "Payment cancelled", body: "Your plan was not changed.", className: "border-amber-500/30 bg-amber-500/10 text-amber-600" }
   if (status === "failed") return { title: "Payment failed", body: "Your plan was not upgraded. Please try again or use another payment method.", className: "border-red-500/30 bg-red-500/10 text-red-600" }
-  if (status === "pending") return { title: "Payment pending", body: "Stripe has not confirmed this payment yet. Your plan will upgrade after confirmation.", className: "border-amber-500/30 bg-amber-500/10 text-amber-600" }
+  if (status === "pending") return { title: "Payment failed", body: "Stripe has not confirmed this payment. Your plan was not upgraded.", className: "border-red-500/30 bg-red-500/10 text-red-600" }
   return null
 }
 
@@ -90,7 +90,7 @@ export async function PlansPage({ paymentStatus = "none" }: { paymentStatus?: Pa
   const returnMessage = paymentMessage(paymentStatus)
 
   return <div className="space-y-6">
-    {paymentStatus === "success" && returnMessage ? <PlanReturnToast title={returnMessage.title} body={returnMessage.body} /> : null}
+    {paymentStatus !== "none" && returnMessage ? <PlanReturnToast title={returnMessage.title} body={returnMessage.body} type={paymentStatus === "success" ? "success" : "error"} /> : null}
     {returnMessage ? <Card className={returnMessage.className}><CardContent className="pt-6"><p className="font-semibold">{returnMessage.title}</p><p className="mt-1 text-sm">{returnMessage.body}</p></CardContent></Card> : null}
     {currentPlan ? <section className="rounded-lg border border-border bg-card p-5 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-sm text-muted-foreground">Current plan</p><h2 className="mt-2 text-2xl font-semibold">{currentPlan.name}</h2><p className="mt-1 text-sm text-muted-foreground">{currentPlan.description}</p></div>{currentPlan.code !== "Free" ? <div className="text-left sm:text-right"><BillingPrice code={currentPlan.code} currency={currentPlan.price.currency} monthlyAmount={currentPlan.price.amount} yearlyAmount={currentPlan.price.yearlyAmount} /><p className="mt-1 text-xs text-emerald-500">Active subscription</p></div> : null}</div>{reachedLimits.length ? <p className="mt-3 rounded border border-amber-500/30 bg-amber-500/10 p-2 text-sm text-amber-200">Usage has reached plan limits for: {reachedLimits.map((item) => item.label).join(", ")}. Ask admin for a higher plan.</p> : null}</section> : null}
     {scheduledChange ? <Card className="border-amber-500/30 bg-amber-500/10"><CardContent className="pt-6"><p className="font-semibold text-amber-600">Downgrade scheduled</p><p className="mt-1 text-sm text-muted-foreground">Your current plan remains active until {formatDate(scheduledChange.effectiveAt)}. {scheduledChange.toPlanName ?? "The smaller plan"} activates automatically after that.</p></CardContent></Card> : null}
