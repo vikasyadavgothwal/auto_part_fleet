@@ -381,7 +381,7 @@ export function FleetRolesPage({
       </section>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingRole ? "Edit role" : "Create role"}</DialogTitle>
             <DialogDescription>

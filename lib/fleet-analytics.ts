@@ -220,11 +220,8 @@ const currency = (amount: number) =>
     maximumFractionDigits: 0,
   })}`
 
-const currencyCompact = (amount: number) => {
-  if (amount >= 1_000_000) return `AED ${(amount / 1_000_000).toFixed(1)}M`
-  if (amount >= 1_000) return `AED ${(amount / 1_000).toFixed(1)}K`
-  return currency(amount)
-}
+const currencyCompact = (amount: number) =>
+  amount >= 1_000 ? formatCompactCurrency(amount) : currency(amount)
 
 const percent = (value: number) => `${Math.round(value)}%`
 
@@ -341,19 +338,19 @@ export function buildFleetOverviewData(input: FleetAnalyticsInput): FleetOvervie
     },
     {
       title: "Active RFQs",
-      value: String(activeRfqs.length),
+      value: formatCompactNumber(activeRfqs.length),
       subtext: `${quoteCount} quote${quoteCount === 1 ? "" : "s"} received`,
       iconKey: "fileText",
     },
     {
       title: "Orders in Progress",
-      value: String(ordersInProgress.length),
+      value: formatCompactNumber(ordersInProgress.length),
       subtext: `${deliveredThisMonth} delivered this month`,
       iconKey: "shoppingCart",
     },
     {
       title: "Total Vehicles",
-      value: String(input.vehicles.length),
+      value: formatCompactNumber(input.vehicles.length),
       subtext: `${activeVehicles} active, ${maintenanceVehicles} maintenance`,
       iconKey: "truck",
     },
@@ -375,13 +372,6 @@ export function buildFleetOverviewData(input: FleetAnalyticsInput): FleetOvervie
       subtext: avgDelivery ? "Based on supplier quotes" : "No quote ETAs yet",
       iconKey: "barChart",
       subtextClass: "text-[#9CA3AF]",
-    },
-    {
-      title: "Maintenance Due",
-      value: `${maintenanceVehicles} vehicle${maintenanceVehicles === 1 ? "" : "s"}`,
-      subtext: "Currently in maintenance",
-      iconKey: "truck",
-      subtextClass: maintenanceVehicles ? "text-yellow-500" : "text-[#9CA3AF]",
     },
   ]
 
@@ -441,7 +431,7 @@ export function buildFleetOverviewData(input: FleetAnalyticsInput): FleetOvervie
     vehicles,
     suppliers: suppliers.slice(0, 3).map((supplier) => ({
       name: supplier.name,
-      orders: String(supplier.orders),
+      orders: formatCompactNumber(supplier.orders),
       spend: currency(supplier.spent),
       rating: `${supplier.rating.toFixed(1)} / 5.0`,
     })),
@@ -531,10 +521,10 @@ export function buildSupplierStats(suppliers: AnalyticsSupplier[]): SupplierStat
     : 0
 
   return [
-    { title: "Active Suppliers", value: String(suppliers.length), iconKey: "package", iconClass: "text-[#DC2626]" },
+    { title: "Active Suppliers", value: formatCompactNumber(suppliers.length), iconKey: "package", iconClass: "text-[#DC2626]" },
     { title: "Total Spent", value: currencyCompact(totalSpent), iconKey: "banknote", iconClass: "text-green-500" },
     { title: "Avg Rating", value: avgRating ? avgRating.toFixed(1) : "-", iconKey: "star", iconClass: "text-yellow-500" },
-    { title: "Preferred Suppliers", value: String(suppliers.filter((supplier) => supplier.status === "Preferred").length), iconKey: "award", iconClass: "text-[#DC2626]" },
+    { title: "Preferred Suppliers", value: formatCompactNumber(suppliers.filter((supplier) => supplier.status === "Preferred").length), iconKey: "award", iconClass: "text-[#DC2626]" },
   ]
 }
 
@@ -673,11 +663,11 @@ export function buildFleetReportData(input: FleetAnalyticsInput): FleetReportDat
       },
       {
         title: "Avg Monthly Orders",
-        value: String(Math.round(totalOrders / Math.max(1, months.length))),
+        value: formatCompactNumber(Math.round(totalOrders / Math.max(1, months.length))),
         iconKey: "package",
         iconClass: "text-[#DC2626]",
         footerType: "text",
-        footerLabel: `${totalOrders} orders total`,
+        footerLabel: `${formatCompactNumber(totalOrders)} orders total`,
       },
       {
         title: "Avg Delivery Time",
@@ -704,3 +694,4 @@ export function buildFleetReportData(input: FleetAnalyticsInput): FleetReportDat
     supplierSpend,
   }
 }
+import { formatCompactCurrency, formatCompactNumber } from "@/lib/format-stats"

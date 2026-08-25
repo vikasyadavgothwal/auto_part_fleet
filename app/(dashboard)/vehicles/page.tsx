@@ -1,10 +1,15 @@
 import { cookies } from "next/headers"
 
 import { VehiclesPageContent } from "@/components/fleet-dashboard/vehicles/vehicles-page-content"
+import { AccessRestrictedCard } from "@/components/fleet-dashboard/shared/access-restricted-card"
 import type { VehiclesResponse } from "@/components/fleet-dashboard/vehicles/types"
 import { requestBackend } from "@/lib/auth/backend"
+import { getFleetBusinessAccess } from "@/lib/business-access.server"
 
 export default async function FleetVehiclesPage() {
+  const access = await getFleetBusinessAccess()
+  if (!access.canView("vehicles")) return <AccessRestrictedCard message="You do not have permission to view Fleet vehicles." />
+
   let payload: VehiclesResponse = { ok: true, vehicles: [], pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 } }
   let error: string | null = null
   try {

@@ -59,14 +59,3 @@ export const vehicles = [
     status: "Active",
   },
 ]
-
-export const maintenanceDue = [
-  {
-    title: "2020 Ford F-150",
-    description: "Oil change due in 500 miles",
-  },
-  {
-    title: "2019 Chevy Silverado",
-    description: "Tire rotation due",
-  },
-]

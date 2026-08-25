@@ -90,6 +90,7 @@ export function CreateRfqPage({ user, initialVehicleId = "" }: { user: Dashboard
   const [submitError, setSubmitError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  const [isCheckingVin, setIsCheckingVin] = useState(false)
   const [importedVehicles, setImportedVehicles] = useState<Array<{ vin: string; year: number; make: string; model: string }>>([])
   const [saveResolvedVehicles, setSaveResolvedVehicles] = useState(false)
 
@@ -205,14 +206,16 @@ async function importRfqFile(file: File | undefined) {
   }
 
   async function handleNext() {
+    if (isCheckingVin || isImporting) return
+
     if (step === 1) {
       const validationError = validateParts(parts, selectedVehicleId)
       if (validationError) {
-        setSubmitError(validationError)
+        // setSubmitError(validationError)
         showToast({ type: "error", title: "Check RFQ parts", message: validationError })
         return
       }
-      setIsImporting(true); setSubmitError("")
+      setIsCheckingVin(true); setSubmitError("")
       try {
         await resolveManualVins()
         setStep(2)
@@ -221,12 +224,12 @@ async function importRfqFile(file: File | undefined) {
         setSubmitError(message)
         showToast({ type: "error", title: "Unable to validate VIN", message })
       }
-      finally { setIsImporting(false) }
+      finally { setIsCheckingVin(false) }
     }
     if (step === 2) {
       const validationError = validateDetails(projectName, deadline, selectedVehicleId, importedVehicleCount)
       if (validationError) {
-        setSubmitError(validationError)
+        // setSubmitError(validationError)
         showToast({ type: "error", title: "Check RFQ details", message: validationError })
         return
       }
@@ -296,7 +299,6 @@ async function importRfqFile(file: File | undefined) {
       const result = await response.json() as { ok: boolean; message?: string; rfq?: { publicId?: string } }
       if (!response.ok || !result.ok) throw new Error(result.message ?? "Unable to submit RFQ")
       const created = result.rfq?.publicId ? `?created=${encodeURIComponent(result.rfq.publicId)}` : "?created=1"
-      showToast({ type: "success", title: "RFQ created", message: result.rfq?.publicId ? `${result.rfq.publicId} created successfully.` : "RFQ created successfully." })
       router.push(`${appRoutes.rfqs}${created}`)
       router.refresh()
     } catch (error) {
@@ -324,6 +326,7 @@ async function importRfqFile(file: File | undefined) {
             canContinue={Boolean(canContinueStep1)}
             canAddPart={parts.length < maxParts}
             isImporting={isImporting}
+            isCheckingVin={isCheckingVin}
             onAddPart={addAnotherPart}
             onImportFile={(file) => void importRfqFile(file)}
             onNext={handleNext}
@@ -357,6 +360,7 @@ async function importRfqFile(file: File | undefined) {
             projectName={projectName}
             deadline={deadline}
             totalQuantity={totalQuantity}
+            isSubmitting={isSubmitting}
             onBack={handleBack}
             onSubmit={isSubmitting ? () => undefined : handleSubmit}
           />

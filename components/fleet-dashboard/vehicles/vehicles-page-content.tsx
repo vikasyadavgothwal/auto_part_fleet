@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { authenticatedFetch } from "@/lib/auth/client"
+import { formatCompactNumber } from "@/lib/format-stats"
 import { appPath, appRoutes } from "@/lib/routes"
 import type { FleetVehicle, VehiclePagination, VehiclesResponse } from "./types"
 
@@ -316,10 +317,10 @@ export function VehiclesPageContent({
 
       <div className="grid gap-4 md:grid-cols-4">
         {[
-          ["Total Vehicles", pagination.total],
-          ["Active on this page", active],
-          ["Maintenance", maintenance],
-          ["Average mileage", averageMileage.toLocaleString()],
+          ["Total Vehicles", formatCompactNumber(pagination.total)],
+          ["Active on this page", formatCompactNumber(active)],
+          ["Maintenance", formatCompactNumber(maintenance)],
+          ["Average mileage", formatCompactNumber(averageMileage)],
         ].map(([label, value]) => (
           <Card key={label} className="border-[#2A2A2A] bg-[#1A1A1A]">
             <CardContent className="p-6">

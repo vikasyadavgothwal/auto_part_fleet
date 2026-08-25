@@ -6,7 +6,9 @@ import { DashboardSummaryCards } from "@/components/fleet-dashboard/dashboard/da
 import { FleetOverviewSection } from "@/components/fleet-dashboard/dashboard/fleet-overview-section"
 import { RecentOrdersSection } from "@/components/fleet-dashboard/dashboard/recent-orders-section"
 import { TopSuppliersCard } from "@/components/fleet-dashboard/dashboard/top-suppliers-card"
+import { AccessRestrictedCard } from "@/components/fleet-dashboard/shared/access-restricted-card"
 import { PageHeading } from "@/components/fleet-dashboard/shared/page-heading"
+import { getFleetBusinessAccess } from "@/lib/business-access.server"
 import { buildFleetOverviewData } from "@/lib/fleet-analytics"
 import { getFleetAnalyticsInput } from "@/lib/fleet-dashboard-data.server"
 import { appPath, appRoutes } from "@/lib/routes"
@@ -25,7 +27,14 @@ export default async function FleetDashboardPage({ searchParams }: FleetDashboar
     redirect(`${appPath(appRoutes.plans)}?${query.toString()}`)
   }
 
-  const overview = buildFleetOverviewData(await getFleetAnalyticsInput())
+  const access = await getFleetBusinessAccess()
+  const canVehicles = access.canView("vehicles")
+  const canRfqs = access.canView("rfqs")
+  const canOrders = access.canView("orders")
+  const canSuppliers = access.canView("suppliers")
+  const canReports = access.canView("reports")
+  const canSeeOperations = access.isOwner || canVehicles || canRfqs || canOrders || canSuppliers || canReports
+  const overview = canSeeOperations ? buildFleetOverviewData(await getFleetAnalyticsInput()) : null
 
   return (
     <div className="space-y-8">
@@ -34,12 +43,13 @@ export default async function FleetDashboardPage({ searchParams }: FleetDashboar
         description="Manage procurement and vehicle maintenance across your fleet."
       />
 
-      <DashboardKpiCards kpis={overview.kpis} />
-      <DashboardSummaryCards summaries={overview.summaries} />
-      <ActiveRfqsSection rfqs={overview.rfqs} />
-      <RecentOrdersSection orders={overview.orders} />
-      <FleetOverviewSection vehicles={overview.vehicles} />
-      <TopSuppliersCard suppliers={overview.suppliers} />
+      {!overview ? <AccessRestrictedCard title="No dashboard access" message="Ask the account owner to assign at least one Fleet section to your role." /> : null}
+      {overview ? <DashboardKpiCards kpis={overview.kpis.filter((item) => canReports ? true : item.iconKey === "truck" ? canVehicles : item.iconKey === "fileText" ? canRfqs : item.iconKey === "shoppingCart" || item.iconKey === "banknote" ? canOrders : true)} /> : null}
+      {overview ? <DashboardSummaryCards summaries={overview.summaries.filter((item) => canReports ? true : item.iconKey === "truck" ? canVehicles : canOrders || canRfqs)} /> : null}
+      {overview && canRfqs ? <ActiveRfqsSection rfqs={overview.rfqs} /> : null}
+      {overview && canOrders ? <RecentOrdersSection orders={overview.orders} /> : null}
+      {overview && canVehicles ? <FleetOverviewSection vehicles={overview.vehicles} /> : null}
+      {overview && canSuppliers ? <TopSuppliersCard suppliers={overview.suppliers} /> : null}
     </div>
   )
 }

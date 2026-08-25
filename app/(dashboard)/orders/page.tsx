@@ -1,10 +1,15 @@
 import { cookies } from "next/headers"
 
 import { LiveOrdersPageContent } from "@/components/fleet-dashboard/orders/live-orders-page-content"
+import { AccessRestrictedCard } from "@/components/fleet-dashboard/shared/access-restricted-card"
 import type { LiveOrder, OrderPagination, OrderSummary } from "@/components/fleet-dashboard/orders/live-types"
 import { requestBackend } from "@/lib/auth/backend"
+import { getFleetBusinessAccess } from "@/lib/business-access.server"
 
 export default async function FleetOrdersPage() {
+  const access = await getFleetBusinessAccess()
+  if (!access.canView("orders")) return <AccessRestrictedCard message="You do not have permission to view Fleet orders." />
+
   let orders: LiveOrder[] = []
   let pagination: OrderPagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 }
   let summary: OrderSummary = { totalOrders: 0, totalAmount: 0, byStatus: {} }

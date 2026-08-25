@@ -1,4 +1,4 @@
-import { ChevronRight, Download, Plus, Upload } from "lucide-react"
+import { ChevronRight, Download, Loader2, Plus, Upload } from "lucide-react"
 
 import { appPath } from "@/lib/routes"
 import type { FleetVehicle } from "@/components/fleet-dashboard/vehicles/types"
@@ -14,6 +14,7 @@ type AddPartsStepProps = {
   onAddPart: () => void
   onNext: () => void
   isImporting: boolean
+  isCheckingVin: boolean
   onImportFile: (file: File | undefined) => void
   onUpdatePart: (
     id: number,
@@ -43,6 +44,7 @@ export function AddPartsStep({
   onAddPart,
   onNext,
   isImporting,
+  isCheckingVin,
   onImportFile,
   onUpdatePart,
   saveResolvedVehicles,
@@ -222,16 +224,25 @@ export function AddPartsStep({
 
       <div className="mt-12 flex gap-4">
         <button
-          aria-disabled={!canContinue}
+          disabled={!canContinue || isImporting || isCheckingVin}
           onClick={onNext}
           className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-medium transition-all ${
-            canContinue
+            canContinue && !isImporting && !isCheckingVin
               ? "bg-[#DC2626] text-white hover:bg-[#B91C1C]"
-              : "bg-[#2A2A2A] text-[#4B5563]"
+              : "cursor-not-allowed bg-[#2A2A2A] text-[#4B5563]"
           }`}
         >
-          Continue
-          <ChevronRight className="h-5 w-5" />
+          {isCheckingVin ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Checking VIN...
+            </>
+          ) : (
+            <>
+              Continue
+              <ChevronRight className="h-5 w-5" />
+            </>
+          )}
         </button>
       </div>
     </div>

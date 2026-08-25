@@ -9,12 +9,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/toast-provider"
 import { authenticatedFetch } from "@/lib/auth/client"
+import { formatCompactCurrency, formatCompactNumber } from "@/lib/format-stats"
 import { appPath } from "@/lib/routes"
 import { PageHeading } from "../shared/page-heading"
 import { StatusBadge } from "../shared/status-badge"
 import type { LiveOrder, OrderPagination, OrderSummary } from "./live-types"
 
 const money = (amount: number) => `AED ${amount.toLocaleString("en-AE", { minimumFractionDigits: 2 })}`
+const statMoney = (amount: number) => amount >= 1_000 ? formatCompactCurrency(amount) : money(amount)
 const supplierName = (order: LiveOrder) => order.supplier.companyName || [order.supplier.firstName, order.supplier.lastName].filter(Boolean).join(" ") || order.supplier.email || "Supplier"
 const labelStatus = (status: LiveOrder["status"]) => status.charAt(0).toUpperCase() + status.slice(1)
 const deliveryOptions = [
@@ -74,10 +76,10 @@ export function LiveOrdersPageContent({ initialOrders, initialPagination, initia
   }
 
   const stats = [
-    { title: "Total Orders", value: String(summary.totalOrders), valueClass: "text-white" },
-    { title: "Processing", value: String((summary.byStatus.pending ?? 0) + (summary.byStatus.confirmed ?? 0) + (summary.byStatus.processing ?? 0)), valueClass: "text-yellow-500" },
-    { title: "Shipped", value: String(summary.byStatus.shipped ?? 0), valueClass: "text-blue-500" },
-    { title: "Total Spent", value: money(summary.totalAmount), valueClass: "text-[#DC2626]" },
+    { title: "Total Orders", value: formatCompactNumber(summary.totalOrders), valueClass: "text-white" },
+    { title: "Processing", value: formatCompactNumber((summary.byStatus.pending ?? 0) + (summary.byStatus.confirmed ?? 0) + (summary.byStatus.processing ?? 0)), valueClass: "text-yellow-500" },
+    { title: "Shipped", value: formatCompactNumber(summary.byStatus.shipped ?? 0), valueClass: "text-blue-500" },
+    { title: "Total Spent", value: statMoney(summary.totalAmount), valueClass: "text-[#DC2626]" },
   ]
 
   return <div className="min-h-screen bg-[#0A0A0A]"><div className="space-y-8">

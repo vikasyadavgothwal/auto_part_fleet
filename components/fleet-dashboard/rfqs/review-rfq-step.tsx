@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, Loader2 } from "lucide-react"
 
 import type { PartItem } from "./create-rfq-types"
 
@@ -7,6 +7,7 @@ type ReviewRfqStepProps = {
   projectName: string
   deadline: string
   totalQuantity: number
+  isSubmitting: boolean
   onBack: () => void
   onSubmit: () => void
 }
@@ -16,6 +17,7 @@ export function ReviewRfqStep({
   projectName,
   deadline,
   totalQuantity,
+  isSubmitting,
   onBack,
   onSubmit,
 }: ReviewRfqStepProps) {
@@ -114,10 +116,18 @@ export function ReviewRfqStep({
         </div>
 
         <button
+          disabled={isSubmitting}
           onClick={onSubmit}
-          className="mt-8 h-14 w-full rounded-xl bg-[#DC2626] text-lg font-medium text-white transition-all hover:bg-[#B91C1C]"
+          className="mt-8 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#DC2626] text-lg font-medium text-white transition-all hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:bg-[#2A2A2A] disabled:text-[#9CA3AF]"
         >
-          Submit RFQ to Suppliers
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Submitting RFQ...
+            </>
+          ) : (
+            "Submit RFQ to Suppliers"
+          )}
         </button>
       </div>
 

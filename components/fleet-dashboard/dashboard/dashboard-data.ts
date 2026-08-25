@@ -49,13 +49,6 @@ export const summaryCards = [
     icon: BarChart3,
     subtextClass: "text-[#9CA3AF]",
   },
-  {
-    title: "Maintenance Due",
-    value: "18 vehicles",
-    subtext: "Next 30 days",
-    icon: Truck,
-    subtextClass: "text-[#9CA3AF]",
-  },
 ]
 
 export const rfqs = [

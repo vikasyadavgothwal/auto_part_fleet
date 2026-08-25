@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Plus, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ export function FleetRfqsPageContent({ initialRfqs, initialPagination, createdRf
   initialPagination: RfqPagination
   createdRfqId: string | null
 }) {
+  const router = useRouter()
   const { showToast } = useToast()
   const [rfqs, setRfqs] = React.useState(initialRfqs)
   const [pagination, setPagination] = React.useState(initialPagination)
@@ -29,12 +31,19 @@ export function FleetRfqsPageContent({ initialRfqs, initialPagination, createdRf
 
   React.useEffect(() => {
     if (!createdRfqId) return
+    const toastKey = `fleet-rfq-created:${createdRfqId}`
+    if (sessionStorage.getItem(toastKey)) {
+      router.replace(appRoutes.rfqs, { scroll: false })
+      return
+    }
+    sessionStorage.setItem(toastKey, "1")
     showToast({
       type: "success",
       title: "RFQ created",
       message: `${createdRfqId === "1" ? "RFQ" : createdRfqId} created successfully. It is now available for supplier quotes.`,
     })
-  }, [createdRfqId, showToast])
+    router.replace(appRoutes.rfqs, { scroll: false })
+  }, [createdRfqId, router, showToast])
 
   const load = async (page: number, query = search) => {
     setLoading(true)
