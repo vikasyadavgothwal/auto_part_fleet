@@ -26,7 +26,13 @@ type AccountResponse = {
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const RequiredAsterisk = () => <span className="text-red-500">*</span>
 
-export function AccountSettingsCard({ initialAccount }: { initialAccount?: Account | null }) {
+export function AccountSettingsCard({
+  initialAccount,
+  allowEmail = true,
+}: {
+  initialAccount?: Account | null
+  allowEmail?: boolean
+}) {
   const { showToast } = useToast()
   const [form, setForm] = useState({
     firstName: initialAccount?.firstName ?? "",
@@ -66,14 +72,14 @@ export function AccountSettingsCard({ initialAccount }: { initialAccount?: Accou
     if (!firstName) { const message = "First name is required."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
     if (!lastName) { const message = "Last name is required."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
     if (firstName.length > 100 || lastName.length > 100) { const message = "Names must be 100 characters or fewer."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
-    if (!email || email.length > 254 || !emailPattern.test(email)) { const message = "Enter a valid email address."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
+    if (allowEmail && (!email || email.length > 254 || !emailPattern.test(email))) { const message = "Enter a valid email address."; setError(message); showToast({ type: "error", title: "Check account", message }); return }
 
     setIsSaving(true)
     try {
       const response = await authenticatedFetch(appPath("/api/account"), {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email }),
+        body: JSON.stringify({ firstName, lastName, ...(allowEmail ? { email } : {}) }),
       })
       const payload = (await response.json().catch(() => null)) as AccountResponse | null
       if (!response.ok || !payload?.ok || !payload.account) {
@@ -107,10 +113,12 @@ export function AccountSettingsCard({ initialAccount }: { initialAccount?: Accou
             <Label htmlFor="account-last-name">Last Name <RequiredAsterisk /></Label>
             <Input id="account-last-name" value={form.lastName} onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))} maxLength={100} placeholder="Enter last name" required className="border-border bg-brand-surface" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="account-email">Email <RequiredAsterisk /></Label>
-            <Input id="account-email" type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} maxLength={254} placeholder="name@company.com" required className="border-border bg-brand-surface" />
-          </div>
+          {allowEmail ? (
+            <div className="space-y-2">
+              <Label htmlFor="account-email">Email <RequiredAsterisk /></Label>
+              <Input id="account-email" type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} maxLength={254} placeholder="name@company.com" required className="border-border bg-brand-surface" />
+            </div>
+          ) : null}
           {error ? <p className="text-sm text-destructive md:col-span-3">{error}</p> : null}
           {message ? <p className="text-sm text-emerald-500 md:col-span-3">{message}</p> : null}
           <div className="md:col-span-3">

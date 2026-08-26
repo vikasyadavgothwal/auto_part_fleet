@@ -43,15 +43,17 @@ const statusLabel = {
   inactive: "Inactive",
 } as const
 
+const RequiredMark = () => <span className="text-red-500">*</span>
+
 const vehicleFields = [
-  ["vehicleName", "Vehicle name", "text"],
-  ["vin", "VIN", "text"],
-  ["mileage", "Mileage", "number"],
-  ["driver", "Driver", "text"],
-  ["year", "Year", "number"],
-  ["make", "Make / Brand", "text"],
-  ["model", "Model", "text"],
-  ["trim", "Trim", "text"],
+  ["vehicleName", "Vehicle name", "text", "Enter vehicle name", true],
+  ["vin", "VIN", "text", "Enter 17-character VIN", true],
+  ["mileage", "Mileage", "number", "Enter mileage", true],
+  ["driver", "Driver", "text", "Enter assigned driver", false],
+  ["year", "Year", "number", "Enter model year", true],
+  ["make", "Make / Brand", "text", "Enter make or brand", true],
+  ["model", "Model", "text", "Enter model", true],
+  ["trim", "Trim", "text", "Enter trim", false],
 ] as const
 
 const createVehicleFields = vehicleFields.filter(([name]) => name !== "vin")
@@ -422,9 +424,9 @@ export function VehiclesPageContent({
           <form key={editingVehicle?.id ?? "create"} noValidate className="space-y-5" onSubmit={saveVehicle}>
             {!editingVehicle ? (
               <div className="space-y-3 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-4">
-                <Label htmlFor="create-vin">VIN first *</Label>
+                <Label htmlFor="create-vin">VIN first <RequiredMark /></Label>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Input id="create-vin" name="vin" value={createVin} maxLength={17} placeholder="JT2BF22K6X0123456" className="bg-[#0A0A0A] uppercase" onChange={(event) => { setCreateVin(normalizeVin(event.target.value)); setResolvedVehicle(null); setManualVehicleEntry(false); setVinLookupMessage("") }} />
+                  <Input id="create-vin" name="vin" value={createVin} maxLength={17} required placeholder="Enter 17-character VIN" className="bg-[#0A0A0A] uppercase" onChange={(event) => { setCreateVin(normalizeVin(event.target.value)); setResolvedVehicle(null); setManualVehicleEntry(false); setVinLookupMessage("") }} />
                   <Button type="button" disabled={vinLookupPending || createVin.length !== 17} onClick={() => void lookupVin()}>{vinLookupPending ? "Searching..." : "Find Vehicle"}</Button>
                 </div>
                 {vinLookupMessage ? <p className="text-sm text-[#9CA3AF]">{vinLookupMessage}</p> : null}
@@ -434,13 +436,15 @@ export function VehiclesPageContent({
             ) : null}
             {editingVehicle || resolvedVehicle || manualVehicleEntry ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              {(editingVehicle ? vehicleFields : createVehicleFields).map(([name, label, type]) => (
+              {(editingVehicle ? vehicleFields : createVehicleFields).map(([name, label, type, placeholder, required]) => (
                 <div key={name} className="space-y-2">
-                  <Label htmlFor={name}>{["vehicleName", "mileage", "year", "make", "model"].includes(name) ? `${label} *` : label}</Label>
+                  <Label htmlFor={name}>{label} {required ? <RequiredMark /> : null}</Label>
                   <Input
                     id={name}
                     name={name}
                     type={type}
+                    required={required}
+                    placeholder={placeholder}
                     min={name === "mileage" ? 1 : type === "number" ? 0 : undefined}
                     max={name === "mileage" ? 70 : name === "year" ? currentVehicleYear : undefined}
                     maxLength={type === "text" ? (name === "vehicleName" || name === "driver" ? 120 : 80) : undefined}
@@ -451,8 +455,8 @@ export function VehiclesPageContent({
                 </div>
               ))}
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <select id="status" name="status" defaultValue={editingVehicle?.status ?? "active"} className="h-10 w-full rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3">
+                <Label htmlFor="status">Status <RequiredMark /></Label>
+                <select id="status" name="status" required defaultValue={editingVehicle?.status ?? "active"} className="h-10 w-full rounded-md border border-[#2A2A2A] bg-[#0A0A0A] px-3">
                   <option value="active">Active</option>
                   <option value="maintenance">Maintenance</option>
                   <option value="inactive">Inactive</option>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { KeyRound } from "lucide-react"
+import { Eye, EyeOff, KeyRound } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,6 +16,7 @@ const RequiredAsterisk = () => <span className="text-red-500">*</span>
 export function ChangePasswordCard() {
   const { showToast } = useToast()
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" })
+  const [visible, setVisible] = useState({ currentPassword: false, newPassword: false, confirmPassword: false })
   const [isSaving, setIsSaving] = useState(false)
 
   const submit = async () => {
@@ -59,10 +60,15 @@ export function ChangePasswordCard() {
             <Label htmlFor={`password-${key}`}>
               {key === "currentPassword" ? "Current Password" : key === "newPassword" ? "New Password" : "Confirm Password"} <RequiredAsterisk />
             </Label>
-            <Input id={`password-${key}`} type="password" autoComplete={key === "currentPassword" ? "current-password" : "new-password"} value={form[key]} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))} minLength={key === "currentPassword" ? undefined : 8} maxLength={128} required placeholder={key === "currentPassword" ? "Enter current password" : key === "newPassword" ? "Enter new password" : "Confirm new password"} className="border-border bg-brand-surface" />
+            <div className="relative">
+              <Input id={`password-${key}`} type={visible[key] ? "text" : "password"} autoComplete={key === "currentPassword" ? "current-password" : "new-password"} value={form[key]} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))} minLength={key === "currentPassword" ? undefined : 8} maxLength={128} required placeholder={key === "currentPassword" ? "Enter current password" : key === "newPassword" ? "Enter new password" : "Confirm new password"} className="border-border bg-brand-surface pr-10" />
+              <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 size-8 -translate-y-1/2 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={() => setVisible((current) => ({ ...current, [key]: !current[key] }))} aria-label={`${visible[key] ? "Hide" : "Show"} ${key === "currentPassword" ? "current password" : key === "newPassword" ? "new password" : "confirm password"}`}>
+                {visible[key] ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </Button>
+            </div>
           </div>
         ))}
-        <div className="md:col-span-3"><Button type="button" variant="outline" disabled={isSaving} onClick={submit} className="gap-2"><KeyRound className="size-4" />{isSaving ? "Changing..." : "Change Password"}</Button></div>
+        <div className="md:col-span-3"><Button type="button" variant="outline" disabled={isSaving} onClick={submit} className="gap-2 bg-primary"><KeyRound className="size-4" />{isSaving ? "Changing..." : "Change Password"}</Button></div>
       </CardContent>
     </Card>
   )
