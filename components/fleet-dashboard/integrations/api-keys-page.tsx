@@ -101,7 +101,7 @@ export function FleetApiKeysPage({ access }: { access?: BusinessAccess }) {
     if (!accountId) return
     setRequestingEnterprise(true)
     try {
-      const response = await fetch(appPath("/api/business/add-ons/request"), { method: "POST", credentials: "include", headers: { "content-type": "application/json" }, body: JSON.stringify({ businessAccountId: accountId, featureKey: "api.enterprise", paymentSuccessUrl: `${window.location.origin}${appPath("/integrations")}?payment=success&session_id={CHECKOUT_SESSION_ID}`, paymentCancelUrl: `${window.location.origin}${appPath("/integrations")}?payment=cancelled` }) })
+      const response = await fetch(appPath("/api/business/add-ons/request"), { method: "POST", credentials: "include", headers: { "content-type": "application/json" }, body: JSON.stringify({ businessAccountId: accountId, featureKey: "api.enterprise", paymentSuccessUrl: `${window.location.origin}${appPath("/payments")}?payment=success&session_id={CHECKOUT_SESSION_ID}`, paymentCancelUrl: `${window.location.origin}${appPath("/payments")}?payment=cancelled` }) })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok || payload?.ok === false) throw new Error(payload?.message ?? "Unable to request Enterprise API access")
       if (payload?.addOnRequest?.payment?.checkoutUrl) {

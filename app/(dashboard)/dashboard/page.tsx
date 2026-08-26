@@ -15,6 +15,14 @@ import { appPath, appRoutes } from "@/lib/routes"
 
 export const dynamic = "force-dynamic"
 
+const staffLandingRoutes = [
+  ["vehicles", appRoutes.vehicles],
+  ["rfqs", appRoutes.rfqs],
+  ["orders", appRoutes.orders],
+  ["suppliers", appRoutes.suppliers],
+  ["reports", appRoutes.reports],
+] as const
+
 type FleetDashboardPageProps = {
   searchParams?: Promise<{ payment?: string; session_id?: string }>
 }
@@ -33,6 +41,10 @@ export default async function FleetDashboardPage({ searchParams }: FleetDashboar
   const canOrders = access.canView("orders")
   const canSuppliers = access.canView("suppliers")
   const canReports = access.canView("reports")
+  const staffLandingRoute = staffLandingRoutes.find(([menu]) => access.canView(menu))?.[1]
+  if (!access.isOwner && staffLandingRoute) {
+    redirect(appPath(staffLandingRoute))
+  }
   const canSeeOperations = access.isOwner || canVehicles || canRfqs || canOrders || canSuppliers || canReports
   const overview = canSeeOperations ? buildFleetOverviewData(await getFleetAnalyticsInput()) : null
 

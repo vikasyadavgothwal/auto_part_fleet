@@ -26,15 +26,16 @@ async function getSettingsContext() {
   ])
   const accessPayload = accessResponse?.ok ? ((await accessResponse.json()) as BusinessAccessPayload) : null
   const accountPayload = accountResponse?.ok ? ((await accountResponse.json()) as AccountPayload) : null
+  const account = accessPayload?.access?.find((item) => item.businessAccount.type === "Fleet")
   return {
-    isOwner: Boolean(accessPayload?.access?.find((item) => item.businessAccount.type === "Fleet")?.businessAccount.isOwner),
+    hasBusinessAccess: Boolean(account),
     account: accountPayload?.account ?? null,
   }
 }
 
 export default async function SettingsPage() {
   const context = await getSettingsContext()
-  const profile = context.isOwner ? await getFleetSettings() : null
+  const profile = context.hasBusinessAccess ? await getFleetSettings() : null
   return (
     <div className="space-y-8">
       {profile ? <FleetSettingsManager profile={profile} /> : null}
